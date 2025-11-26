@@ -1,29 +1,79 @@
 {
   "expo": {
-    "name": "nl-job",
-    "slug": "nl-job",
+    "name": "JOB NLTECH",
+    "slug": "job-nltech",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/nltech.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/nl-konen.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#667eea"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ứng dụng cần sử dụng camera để chụp ảnh điểm danh chấm công giờ làm việc.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn trong thời gian làm việc để lưu trữ vị trí này trên cơ sở dữ liệu. Quản trị viên sẽ theo dõi vị trí của bạn trên trang web của công ty để đánh giá hiệu suất công việc dựa trên khu vực bạn làm việc.",
+        "NSLocationAlwaysUsageDescription": "Ứng dụng cần truy cập vị trí của bạn trong thời gian làm việc để lưu trữ vị trí này trên cơ sở dữ liệu. Quản trị viên sẽ theo dõi vị trí của bạn trên trang web của công ty để đánh giá hiệu suất công việc dựa trên khu vực bạn làm việc.",
+        "NSLocationWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn trong thời gian làm việc để lưu trữ vị trí này trên cơ sở dữ liệu. Quản trị viên sẽ theo dõi vị trí của bạn trên trang web của công ty để đánh giá hiệu suất công việc dựa trên khu vực bạn làm việc.",
+        "NSPhotoLibraryUsageDescription": "Ứng dụng này cần truy cập thư viện ảnh để sử dụng ảnh điểm danh chấm công giờ làm việc."
+      },
+      "bundleIdentifier": "com.nltech.jobnltech"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/nltech.png",
+        "backgroundColor": "#667eea"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.namnhi993.jobnltech"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/images/nltech.png"
+    },
+    "notification": {
+      "icon": "./assets/images/nltech.png",
+      "color": "#3b82f6",
+      "iosDisplayInForeground": true,
+      "androidMode": "default",
+      "androidCollapsedTitle": "JOB NLTECH"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/nltech.png",
+          "color": "#3b82f6",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần truy cập vị trí của bạn trong thời gian làm việc để lưu trữ vị trí này trên cơ sở dữ liệu."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3f2dc4a3-7526-45aa-b9b5-71fdeac6980d"
+      }
+    },
+    "owner": "namnhi993"
   }
 }
