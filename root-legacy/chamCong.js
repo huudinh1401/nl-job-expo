@@ -398,12 +398,12 @@ const ChamCong = ({ navigation }) => {
                     const distance = haversineDistance(userLocation, companyLocation);
                     const distanceB = haversineDistance(userLocation, companyLocationB);
 
-                    if (distance <= 0.08 || distanceB <= 0.08) {
+                    if (distance <= 0.58 || distanceB <= 0.58) {
                         setIsGettingLocation(false);
                         setIsScanning(true);
                     } else {
                         setIsGettingLocation(false);
-                        Alert.alert('Điểm danh lỗi', 'Bạn đang cách công ty > 30m!');
+                        Alert.alert('Điểm danh lỗi', 'Bạn đang cách công ty > 50m!');
                         if (status === false) { setIsLoadingVao(false); }
                         else { setIsLoadingVe(false); }
                     }

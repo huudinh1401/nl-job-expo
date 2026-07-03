@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Alert, ActivityIndicator, View, Image, Text, Animated } from 'react-native';
+import { Alert, View, Image, Text, Animated } from 'react-native';
 import 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dimensions } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import AppNavigator from './src/navigation/AppNavigator';
-
-import { apiGetJobHistory, apiCheckStatusUser, apiUpdateDeviceToken } from './src/services/apiService';
+import notificationService from './src/services/notificationService';
+import { apiGetJobHistory, apiCheckStatusUser } from './src/services/apiService';
 const { width, height } = Dimensions.get('window');
 const isTablet = width >= 768;
 
@@ -118,29 +117,14 @@ const App = () => {
   const [jobStatus, setJobStatus] = useState({ isGetJob: false, jobData: null });
   const [currentJob, setCurrentJob] = useState(null);
 
-  async function requestUserPermission() {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status === 'granted') {
-        console.log('Quyền thông báo đã được cấp.');
-      } else {
-        console.log('Quyền thông báo không được cấp.');
-      }
-    } catch (error) {
-      console.error('Lỗi khi xin quyền thông báo:', error);
-    }
-  }
-
   const initializeAfterLogin = async (userID) => {
     try {
-      // Kiểm tra trạng thái job của user
       const statusRes = await apiCheckStatusUser(userID);
       const jobStatus = {
         isGetJob: statusRes.message === 1,
         jobData: statusRes.data || null
       };
 
-      // Lấy job hiện tại nếu có
       const historyRes = await apiGetJobHistory();
       const currentJob = historyRes.data.find(item =>
         String(item.user_id) === String(userID) && item.end === null
@@ -148,7 +132,7 @@ const App = () => {
 
       return { jobStatus, currentJob };
     } catch (error) {
-      console.error('Lỗi khởi tạo dữ liệu sau login:', error);
+      console.error('Loi khoi tao du lieu sau login:', error);
       return {
         jobStatus: { isGetJob: false, jobData: null },
         currentJob: null
@@ -156,21 +140,30 @@ const App = () => {
     }
   };
 
+  // Callback khi nhan notification ve job
+  const handleJobNotification = async (type, data) => {
+    console.log('[App] Nhan notification job:', type);
+    if (user?.userID) {
+      await refreshJobStatus();
+    }
+  };
+
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('🚀 App.js: Initializing app...');
+        console.log('[App] Dang khoi tao...');
 
-        // 1. Khởi tạo notifications
-        await requestUserPermission();
-        await setupNotifications();
+        // 1. Khoi tao notification service (chi 1 lan)
+        await notificationService.initialize();
 
-        // 2. Kiểm tra authentication
+        // 2. Dang ky callback xu ly notification
+        notificationService.setOnJobNotificationCallback(handleJobNotification);
+
+        // 3. Kiem tra authentication
         const accessToken = await AsyncStorage.getItem('accessToken');
         const refreshToken = await AsyncStorage.getItem('refreshToken');
 
         if (accessToken && refreshToken) {
-          // Lấy thông tin user từ storage
           const [userID, username, role, job, avatar] = await Promise.all([
             AsyncStorage.getItem('userID'),
             AsyncStorage.getItem('username'),
@@ -184,118 +177,53 @@ const App = () => {
             setUser(userInfo);
             setIsAuthenticated(true);
 
-            // 3. Khởi tạo dữ liệu sau khi đăng nhập
             const initResult = await initializeAfterLogin(userID);
             setJobStatus(initResult.jobStatus);
             setCurrentJob(initResult.currentJob);
 
-            console.log('✅ App.js: User already authenticated');
+            // 4. Cap nhat device token len server (chi khi production build)
+            await notificationService.updateDeviceTokenOnServer(userID);
+
+            console.log('[App] User da dang nhap');
           } else {
             setIsAuthenticated(false);
           }
         } else {
-          console.log('❌ App.js: User not authenticated');
+          console.log('[App] User chua dang nhap');
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('❌ Lỗi khởi tạo app:', error);
+        console.error('[App] Loi khoi tao:', error);
         setIsAuthenticated(false);
       }
     };
 
     initializeApp();
+
+    // Cleanup khi unmount
+    return () => {
+      notificationService.cleanup();
+    };
   }, []);
 
-  const setupNotifications = async () => {
-    try {
-      // Thiết lập notification handler khi app đang active
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-        }),
-      });
-
-      // Lắng nghe notification khi app đang chạy foreground
-      const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-        console.log('📬 Notification received:', notification);
-        const { data } = notification.request.content;
-        const type = data?.type;
-
-        if (type === 'new_job') {
-          Alert.alert(
-            'Chú ý...!',
-            `Bạn có công việc mới, xem ngay!`,
-            [{ text: 'Đóng', style: 'cancel' }],
-            { cancelable: false }
-          );
-        } else if (type === 'delete_job') {
-          Alert.alert(
-            'Chú ý...!',
-            `Công việc của bạn đã được HỦY BỎ bởi Đội trưởng, vui lòng đợi để nhận việc khác!`,
-            [{ text: 'Đóng', style: 'cancel' }],
-            { cancelable: false }
-          );
-        } else {
-          Alert.alert(
-            'Chú ý...!',
-            `Công việc của bạn đã được cập nhật nội dung mới bởi Đội trưởng, hãy xem lại nội dung công việc!`,
-            [{ text: 'Đóng', style: 'cancel' }],
-            { cancelable: false }
-          );
-        }
-      });
-
-      // Lắng nghe khi user tap vào notification
-      const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-        console.log('📱 Notification tapped:', response);
-      });
-
-      return () => {
-        Notifications.removeNotificationSubscription(notificationListener);
-        Notifications.removeNotificationSubscription(responseListener);
-      };
-    } catch (error) {
-      console.error('❌ Lỗi setup notifications:', error);
-    }
-  };
-
-  const addDeviceToken = async (id, device_token) => {
-    try {
-      const data = await apiUpdateDeviceToken(id, device_token);;
-      //console.log('data device_token', data);  // Log ra token của thiết bị
-    } catch (error) {
-      console.error('Lỗi khi lấy token:', error);
-    }
-  };
-
-  // Handle khi login thành công từ LoginScreen
+  // Handle khi login thanh cong tu LoginScreen
   const handleLoginSuccess = async (userInfo) => {
     try {
-      console.log('🚀 App.js: handleLoginSuccess called with:', userInfo);
-      console.log('🔧 Current auth state before update:', isAuthenticated);
+      console.log('[App] handleLoginSuccess:', userInfo.username);
 
-      // Khởi tạo dữ liệu trước khi cập nhật state (để tránh race condition)
-      console.log('🔄 Initializing data after login...');
       const initResult = await initializeAfterLogin(userInfo.userID);
 
-      // Cập nhật tất cả state cùng lúc để trigger single re-render
-      console.log('📝 Updating all states...');
       setUser(userInfo);
       setJobStatus(initResult.jobStatus);
       setCurrentJob(initResult.currentJob);
-      setIsAuthenticated(true); // Set này cuối cùng để trigger navigation
+      setIsAuthenticated(true);
 
-      console.log('✅ Authentication state updated:', {
-        user: userInfo.username,
-        role: userInfo.role,
-        jobStatus: initResult.jobStatus.isGetJob
-      });
-      console.log('🧭 AppNavigator should now re-render and navigate');
+      // Cap nhat device token len server
+      await notificationService.updateDeviceTokenOnServer(userInfo.userID);
 
+      console.log('[App] Login thanh cong');
     } catch (error) {
-      console.error('❌ Lỗi xử lý login success:', error);
+      console.error('[App] Loi xu ly login:', error);
       Alert.alert('Lỗi', 'Có lỗi xảy ra trong quá trình đăng nhập.');
     }
   };
@@ -303,11 +231,8 @@ const App = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      console.log('🚪 App.js: Starting logout process...');
-      console.log('🔧 Current auth state before logout:', isAuthenticated);
+      console.log('[App] Dang logout...');
 
-      // Clear storage FIRST
-      console.log('🗑️ Clearing AsyncStorage...');
       await AsyncStorage.multiRemove([
         'accessToken',
         'refreshToken',
@@ -315,20 +240,18 @@ const App = () => {
         'username',
         'job',
         'avatar',
-        'role'
+        'role',
+        'expoPushToken'
       ]);
 
-      // Then clear authentication state để trigger navigation
-      console.log('📝 Clearing app state...');
       setUser(null);
       setJobStatus({ isGetJob: false, jobData: null });
       setCurrentJob(null);
-      setIsAuthenticated(false); // Set này cuối cùng để trigger navigation
+      setIsAuthenticated(false);
 
-      console.log('✅ Logout completed - Navigator should re-render to Login');
+      console.log('[App] Logout thanh cong');
     } catch (error) {
-      console.error('❌ Lỗi logout:', error);
-      // Force state clear even if storage clear fails
+      console.error('[App] Loi logout:', error);
       setUser(null);
       setJobStatus({ isGetJob: false, jobData: null });
       setCurrentJob(null);
@@ -340,30 +263,25 @@ const App = () => {
   const refreshJobStatus = async () => {
     if (user?.userID) {
       try {
+        console.log('[App] Refresh job status...');
         const initResult = await initializeAfterLogin(user.userID);
         setJobStatus(initResult.jobStatus);
         setCurrentJob(initResult.currentJob);
       } catch (error) {
-        console.error('Lỗi refresh job status:', error);
+        console.error('[App] Loi refresh job status:', error);
       }
     }
   };
 
-  // Debug log để theo dõi state changes
-  console.log('🔄 App.js render:', {
-    isAuthenticated,
-    hasUser: !!user,
-    userRole: user?.role,
-    showSplashLoading: isAuthenticated === null
-  });
+  console.log('[App] Render:', { isAuthenticated, hasUser: !!user, userRole: user?.role });
 
-  // Hiển thị SplashLoading khi đang kiểm tra authentication
+  // Hien thi SplashLoading khi dang kiem tra authentication
   if (isAuthenticated === null) {
-    console.log('📱 Rendering SplashLoading...');
+    console.log('[App] Hien thi SplashLoading...');
     return <SplashLoading />;
   }
 
-  console.log('🧭 Rendering AppNavigator with auth state:', isAuthenticated);
+  console.log('[App] Render AppNavigator');
   return (
     <SafeAreaProvider>
       <AppNavigator

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "568197084786",
+    "project_id": "nl-job-f1936",
+    "storage_bucket": "nl-job-f1936.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568197084786:android:173ee55e66f63505e134eb",
+        "android_client_info": {
+          "package_name": "com.jobnltech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4fGtZYetKbogyc63XNUH8hWakB-WZnOg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

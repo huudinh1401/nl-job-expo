@@ -1,14 +1,14 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 import { Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiUpdateDeviceToken } from './apiService';
 
-// Cấu hình notification handler
+// Cau hinh cach xu ly notifications khi app dang chay
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
     }),
@@ -16,101 +16,32 @@ Notifications.setNotificationHandler({
 
 class NotificationService {
     constructor() {
+        this.expoPushToken = null;
         this.notificationListener = null;
         this.responseListener = null;
+        this.isInitialized = false;
+        this.onJobNotificationCallback = null;
     }
 
-    // Yêu cầu quyền notification
-    async requestPermissions() {
-        if (!Device.isDevice) {
-            console.log('🔧 Chạy trên simulator/emulator - sử dụng mock permissions');
-            return true; // Return true để app hoạt động bình thường
-        }
+    // Dang ky push notifications va lay token
+    async registerForPushNotificationsAsync() {
+        let token;
 
-        // Check if running in Expo Go
-        if (Constants.appOwnership === 'expo') {
-            console.log('⚠️ Chạy trong Expo Go - Push notifications bị giới hạn với SDK 53+');
-            console.log('📱 Để test notification đầy đủ, vui lòng sử dụng Development Build');
-            return true; // Return true để app hoạt động bình thường
-        }
+        console.log('[Notification] Bat dau dang ky push notifications...');
+        console.log('[Notification] Device.isDevice:', Device.isDevice);
+        console.log('[Notification] Platform.OS:', Platform.OS);
 
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-            Alert.alert('Lỗi', 'Vui lòng cấp quyền thông báo để nhận tin nhắn công việc!');
-            return false;
-        }
-
-        return true;
-    }
-
-    // Lấy Expo Push Token
-    async getExpoPushToken() {
-        try {
-            if (!Device.isDevice) {
-                console.log('🔧 Simulator/Emulator - generating mock token');
-                return `ExponentPushToken[SIMULATOR_MOCK_TOKEN_${Date.now()}]`;
-            }
-
-            // Check if running in Expo Go
-            if (Constants.appOwnership === 'expo') {
-                console.log('⚠️ Expo Go không hỗ trợ Push Token với SDK 53+');
-                // Return mock token cho development trong Expo Go
-                return `ExponentPushToken[EXPO_GO_MOCK_TOKEN_${Date.now()}]`;
-            }
-
-            const hasPermission = await this.requestPermissions();
-            if (!hasPermission) {
-                return null;
-            }
-
-            // Lấy projectId từ config
-            const projectId = Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
-            console.log('🔧 Project ID:', projectId);
-
-            let token;
-            if (projectId && projectId !== 'your-project-id-here' && projectId !== 'a1b2c3d4-e5f6-7890-1234-567890abcdef') {
-                // Sử dụng project ID thật
-                token = await Notifications.getExpoPushTokenAsync({ projectId });
-            } else {
-                // Fallback: thử không cần project ID (cho development)
-                console.log('⚠️ No valid project ID, trying without projectId...');
-                try {
-                    token = await Notifications.getExpoPushTokenAsync();
-                } catch (fallbackError) {
-                    console.log('📱 Fallback failed, generating mock token for development');
-                    console.log('📱 Fallback error:', fallbackError.message);
-                    return `ExponentPushToken[DEV_MOCK_TOKEN_${Date.now()}]`;
-                }
-            }
-
-            console.log('✅ Expo Push Token generated:', token.data);
-            return token.data;
-        } catch (error) {
-            console.error('Lỗi khi lấy Expo Push Token:', error);
-            return null;
-        }
-    }
-
-    // Cấu hình notification channel cho Android
-    async setupNotificationChannel() {
+        // Setup channel cho Android
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('default', {
                 name: 'Default',
                 importance: Notifications.AndroidImportance.MAX,
                 vibrationPattern: [0, 250, 250, 250],
                 lightColor: '#FF231F7C',
-                sound: 'default',
             });
 
             await Notifications.setNotificationChannelAsync('job-notifications', {
-                name: 'Job Notifications',
+                name: 'Thông báo công việc',
                 description: 'Thông báo về công việc mới',
                 importance: Notifications.AndroidImportance.HIGH,
                 vibrationPattern: [0, 250, 250, 250],
@@ -118,149 +49,230 @@ class NotificationService {
                 sound: 'default',
             });
         }
+
+        // Luon thu lay token that truoc
+        try {
+            console.log('[Notification] Bat dau lay permission...');
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            console.log('[Notification] Permission hien tai:', existingStatus);
+
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== 'granted') {
+                console.log('[Notification] Dang request permission...');
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+                console.log('[Notification] Permission sau khi request:', finalStatus);
+            }
+
+            if (finalStatus !== 'granted') {
+                console.log('[Notification] Permission bi tu choi');
+                return null;
+            }
+
+            // Lay token Expo
+            const projectId = '3f2dc4a3-7526-45aa-b9b5-71fdeac6980d';
+            console.log('[Notification] Dang lay Expo push token voi projectId:', projectId);
+
+            const tokenData = await Notifications.getExpoPushTokenAsync({
+                projectId: projectId
+            });
+
+            token = tokenData.data;
+            this.expoPushToken = token;
+
+            console.log('========================================');
+            console.log('[Notification] TOKEN:', token);
+            console.log('[Notification] TOKEN TYPE:', typeof token);
+            console.log('[Notification] TOKEN LENGTH:', token ? token.length : 0);
+            console.log('========================================');
+
+        } catch (error) {
+            console.log('========================================');
+            console.log('[Notification] LOI KHI LAY TOKEN:', error.message);
+            console.log('[Notification] ERROR STACK:', error.stack);
+            console.log('========================================');
+            return null;
+        }
+
+        return token;
     }
 
-    // Thiết lập listeners cho notification
+    // Lay device token hien tai
+    getDeviceToken() {
+        return this.expoPushToken;
+    }
+
+    // Dang ky callback khi co notification ve job
+    setOnJobNotificationCallback(callback) {
+        this.onJobNotificationCallback = callback;
+    }
+
+    // Truy cap notification content theo API moi cua Expo, tranh dung getter deprecate dataString
+    getNotificationPayload(content) {
+        return {
+            title: content?.title ?? '',
+            body: content?.body ?? '',
+            data: content?.data ?? {}
+        };
+    }
+
+    // Setup listeners
     setupNotificationListeners() {
-        // Listener khi nhận notification (app đang mở)
+        // Xoa listeners cu neu co
+        this.cleanup();
+
+        // Listener khi nhan notification (app dang mo)
         this.notificationListener = Notifications.addNotificationReceivedListener(notification => {
-            console.log('Notification received:', notification);
+            const payload = this.getNotificationPayload(notification.request.content);
+            console.log('[Notification] Received:', payload);
             this.handleNotificationReceived(notification);
         });
 
-        // Listener khi user tap vào notification
+        // Listener khi user tap vao notification
         this.responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-            console.log('Notification response:', response);
+            console.log('[Notification] User tapped');
             this.handleNotificationResponse(response);
         });
     }
 
-    // Xử lý khi nhận notification
+    // Xu ly khi nhan notification
     handleNotificationReceived(notification) {
-        const { title, body, data } = notification.request.content;
-        const { type } = data || {};
+        const { body, data } = this.getNotificationPayload(notification.request.content);
+        const type = data?.type;
+
+        let title = 'Chú ý...!';
+        let message = '';
 
         switch (type) {
             case 'new_job':
-                Alert.alert(
-                    'Chú ý...!',
-                    'Bạn có công việc mới, xem ngay!',
-                    [
-                        { text: 'Đóng', style: 'cancel' },
-                        { text: 'Xem ngay', onPress: () => this.handleJobNotification(data) }
-                    ]
-                );
+                message = 'Bạn có công việc mới, xem ngay!';
                 break;
             case 'delete_job':
-                Alert.alert(
-                    'Chú ý...!',
-                    'Công việc của bạn đã được HỦY BỎ bởi Đội trưởng, vui lòng đợi để nhận việc khác!',
-                    [{ text: 'Đóng', style: 'cancel' }]
-                );
+                message = 'Công việc của bạn đã được HỦY BỎ bởi Đội trưởng!';
                 break;
             case 'update_job':
-                Alert.alert(
-                    'Chú ý...!',
-                    'Công việc của bạn đã được cập nhật nội dung mới bởi Đội trưởng, hãy xem lại nội dung công việc!',
-                    [
-                        { text: 'Đóng', style: 'cancel' },
-                        { text: 'Xem ngay', onPress: () => this.handleJobNotification(data) }
-                    ]
-                );
+            case 'edit_job':
+                message = 'Công việc của bạn đã được cập nhật nội dung mới!';
                 break;
             default:
-                if (title && body) {
-                    Alert.alert(title, body);
-                }
+                message = body || 'Bạn có thông báo mới';
                 break;
         }
+
+        Alert.alert(title, message, [{ text: 'Đóng', style: 'cancel' }], { cancelable: true });
+
+        // Goi callback de refresh job status
+        if (this.onJobNotificationCallback && (type === 'new_job' || type === 'delete_job' || type === 'update_job' || type === 'edit_job')) {
+            setTimeout(() => {
+                this.onJobNotificationCallback(type, data);
+            }, 500);
+        }
     }
 
-    // Xử lý khi user tap vào notification
+    // Xu ly khi user tap vao notification
     handleNotificationResponse(response) {
-        const { data } = response.notification.request.content;
-        console.log('User tapped notification:', data);
+        const { data } = this.getNotificationPayload(response.notification.request.content);
+        const type = data?.type;
 
-        // Có thể navigation tới màn hình cụ thể ở đây
-        if (data?.type === 'new_job' || data?.type === 'update_job') {
-            this.handleJobNotification(data);
+        if (this.onJobNotificationCallback && (type === 'new_job' || type === 'delete_job' || type === 'update_job' || type === 'edit_job')) {
+            this.onJobNotificationCallback(type, data);
         }
     }
 
-    // Xử lý notification về job
-    handleJobNotification(data) {
-        // Emit event để các component khác có thể listen
-        // Hoặc sử dụng navigation service để navigate
-        console.log('Handling job notification:', data);
-    }
-
-    // Cập nhật device token lên server
-    async updateDeviceTokenOnServer(userId) {
-        try {
-            const token = await this.getExpoPushToken();
-            if (token && userId) {
-                await apiUpdateDeviceToken(userId, token);
-                console.log('Device token đã được cập nhật lên server');
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Lỗi khi cập nhật device token:', error);
-            return false;
-        }
-    }
-
-    // Khởi tạo notification service
+    // Khoi tao notification service
     async initialize() {
+        if (this.isInitialized) {
+            console.log('[Notification] Da khoi tao truoc do');
+            return true;
+        }
+
         try {
-            await this.setupNotificationChannel();
+            console.log('[Notification] Dang khoi tao...');
+
+            // Dang ky va lay token
+            await this.registerForPushNotificationsAsync();
+
+            // Setup listeners
             this.setupNotificationListeners();
 
-            // Lấy và lưu token
-            const token = await this.getExpoPushToken();
-            if (token) {
-                await AsyncStorage.setItem('expoPushToken', token);
-            }
-
+            this.isInitialized = true;
+            console.log('[Notification] Khoi tao thanh cong');
             return true;
         } catch (error) {
-            console.error('Lỗi khởi tạo notification service:', error);
+            console.error('[Notification] Loi khoi tao:', error.message);
             return false;
         }
     }
 
-    // Gửi notification local (test)
+    // Cap nhat device token len server
+    async updateDeviceTokenOnServer(userId) {
+        if (!this.expoPushToken || !userId) {
+            console.log('[Notification] Khong co token hoac userId');
+            return false;
+        }
+
+        try {
+            await apiUpdateDeviceToken(userId, this.expoPushToken);
+            await AsyncStorage.setItem('expoPushToken', this.expoPushToken);
+            console.log('[Notification] Da cap nhat token len server');
+            return true;
+        } catch (error) {
+            console.error('[Notification] Loi cap nhat token:', error.message);
+            return false;
+        }
+    }
+
+    // Gui notification local (test)
     async sendLocalNotification(title, body, data = {}) {
-        await Notifications.scheduleNotificationAsync({
-            content: {
-                title,
-                body,
-                data,
-                sound: 'default',
-            },
-            trigger: null, // Gửi ngay lập tức
-        });
+        try {
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title,
+                    body,
+                    data,
+                    sound: 'default',
+                },
+                trigger: { seconds: 1 },
+            });
+            return true;
+        } catch (error) {
+            console.error('[Notification] Loi gui local notification:', error.message);
+            return false;
+        }
     }
 
     // Cleanup listeners
     cleanup() {
         if (this.notificationListener) {
-            Notifications.removeNotificationSubscription(this.notificationListener);
+            this.notificationListener.remove();
+            this.notificationListener = null;
         }
         if (this.responseListener) {
-            Notifications.removeNotificationSubscription(this.responseListener);
+            this.responseListener.remove();
+            this.responseListener = null;
         }
     }
 
-    // Lấy notification permissions status
+    // Clear tat ca notifications
+    async clearAllNotifications() {
+        await Notifications.dismissAllNotificationsAsync();
+    }
+
+    // Lay permission status
     async getPermissionStatus() {
         const { status } = await Notifications.getPermissionsAsync();
         return status;
     }
 
-    // Mở app settings để user có thể cấp quyền
-    async openSettings() {
-        await Notifications.openSettingsAsync();
+    // Kiem tra trang thai
+    getStatus() {
+        return {
+            isInitialized: this.isInitialized,
+            hasToken: !!this.expoPushToken,
+            token: this.expoPushToken,
+            hasListeners: !!(this.notificationListener && this.responseListener)
+        };
     }
 }
 

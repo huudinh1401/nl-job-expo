@@ -192,42 +192,42 @@ const BangChamCongScreen = ({ navigation }) => {
     };
 
     const renderTableHeader = () => (
-        <View style={{flexDirection: 'row', backgroundColor: '#f8fafc', paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0'}}>
-            <Text style={{width: 80, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Ngày</Text>
-            <Text style={{width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Thứ</Text>
-            <Text style={{width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Giờ vào</Text>
-            <Text style={{width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Giờ ra</Text>
-            <Text style={{width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Phút vào</Text>
-            <Text style={{width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Phút ra</Text>
-            <Text style={{width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Tổng phút</Text>
-            <Text style={{width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center'}}>Ngày công</Text>
+        <View style={{ flexDirection: 'row', backgroundColor: '#f8fafc', paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+            <Text style={{ width: 80, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Ngày</Text>
+            <Text style={{ width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Thứ</Text>
+            <Text style={{ width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Giờ vào</Text>
+            <Text style={{ width: 60, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Giờ ra</Text>
+            <Text style={{ width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Phút vào</Text>
+            <Text style={{ width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Phút ra</Text>
+            <Text style={{ width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Tổng phút</Text>
+            <Text style={{ width: 70, color: '#1e293b', fontWeight: '700', fontSize: 12, textAlign: 'center' }}>Ngày công</Text>
         </View>
     );
 
     const renderTableRow = ({ item, index }) => (
-        <View style={{flexDirection: 'row', backgroundColor: item.thu === 'Chủ nhật' ? '#fef3c7' : index % 2 === 0 ? '#ffffff' : '#f8fafc', paddingVertical: 10, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0'}}>
-            <Text style={{width: 80, color: '#1e293b', fontSize: 11, fontWeight: item.thu === 'Chủ nhật' ? '600' : '500', textAlign: 'center'}}>
+        <View style={{ flexDirection: 'row', backgroundColor: item.thu === 'Chủ nhật' ? '#fef3c7' : index % 2 === 0 ? '#ffffff' : '#f8fafc', paddingVertical: 10, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+            <Text style={{ width: 80, color: '#1e293b', fontSize: 11, fontWeight: item.thu === 'Chủ nhật' ? '600' : '500', textAlign: 'center' }}>
                 {item.ngay}
             </Text>
-            <Text style={{width: 60, color: item.thu === 'Chủ nhật' ? '#dc2626' : '#1e293b', fontSize: 11, fontWeight: item.thu === 'Chủ nhật' ? '600' : '500', textAlign: 'center'}}>
+            <Text style={{ width: 60, color: item.thu === 'Chủ nhật' ? '#dc2626' : '#1e293b', fontSize: 11, fontWeight: item.thu === 'Chủ nhật' ? '600' : '500', textAlign: 'center' }}>
                 {item.thu}
             </Text>
-            <Text style={{width: 60, color: item.gioVao ? '#059669' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center'}}>
+            <Text style={{ width: 60, color: item.gioVao ? '#059669' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center' }}>
                 {item.gioVao || '-'}
             </Text>
-            <Text style={{width: 60, color: item.gioRa ? '#dc2626' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center'}}>
+            <Text style={{ width: 60, color: item.gioRa ? '#dc2626' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center' }}>
                 {item.gioRa || '-'}
             </Text>
-            <Text style={{width: 70, color: item.soPhutVao > 0 ? '#1e40af' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center'}}>
+            <Text style={{ width: 70, color: item.soPhutVao > 0 ? '#1e40af' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center' }}>
                 {item.soPhutVao || 0}
             </Text>
-            <Text style={{width: 70, color: item.soPhutRa > 0 ? '#1e40af' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center'}}>
+            <Text style={{ width: 70, color: item.soPhutRa > 0 ? '#1e40af' : '#64748b', fontSize: 11, fontWeight: '500', textAlign: 'center' }}>
                 {item.soPhutRa || 0}
             </Text>
-            <Text style={{width: 70, color: item.tongPhut > 0 ? '#059669' : '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'center'}}>
+            <Text style={{ width: 70, color: item.tongPhut > 0 ? '#059669' : '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'center' }}>
                 {item.tongPhut || 0}
             </Text>
-            <Text style={{width: 70, color: item.ngayCong > 0 ? '#dc2626' : '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'center'}}>
+            <Text style={{ width: 70, color: item.ngayCong > 0 ? '#dc2626' : '#64748b', fontSize: 11, fontWeight: '600', textAlign: 'center' }}>
                 {item.ngayCong || 0}
             </Text>
         </View>
@@ -235,11 +235,11 @@ const BangChamCongScreen = ({ navigation }) => {
 
     const renderDatePickerModal = () => (
         <Modal visible={isDatePickerVisible} transparent={true} animationType="slide" onRequestClose={hideDatePicker}>
-            <View style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center'}}>
-                <View style={{backgroundColor: '#ffffff', margin: 20, borderRadius: 20, padding: 20, width: '90%', maxHeight: '70%'}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20}}>
-                        <Text style={{fontSize: 18, fontWeight: '700', color: '#1e293b'}}>Chọn tháng và năm</Text>
-                        <TouchableOpacity onPress={hideDatePicker} style={{backgroundColor: 'rgba(0,0,0,0.1)', padding: 8, borderRadius: 20}}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ backgroundColor: '#ffffff', margin: 20, borderRadius: 20, padding: 20, width: '90%', maxHeight: '70%' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b' }}>Chọn tháng và năm</Text>
+                        <TouchableOpacity onPress={hideDatePicker} style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: 8, borderRadius: 20 }}>
                             <Ionicons name='close' size={20} color='#1e293b' />
                         </TouchableOpacity>
                     </View>
@@ -249,10 +249,10 @@ const BangChamCongScreen = ({ navigation }) => {
                         keyExtractor={(item) => item.value}
                         renderItem={({ item }) => (
                             <TouchableOpacity
-                                style={{paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', backgroundColor: (item.month === thang && item.year === nam) ? '#dbeafe' : 'transparent'}}
+                                style={{ paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', backgroundColor: (item.month === thang && item.year === nam) ? '#dbeafe' : 'transparent' }}
                                 onPress={() => handleConfirm(item)}
                             >
-                                <Text style={{fontSize: 16, color: (item.month === thang && item.year === nam) ? '#1e40af' : '#1e293b', fontWeight: (item.month === thang && item.year === nam) ? '600' : '400'}}>
+                                <Text style={{ fontSize: 16, color: (item.month === thang && item.year === nam) ? '#1e40af' : '#1e293b', fontWeight: (item.month === thang && item.year === nam) ? '600' : '400' }}>
                                     {item.label}
                                 </Text>
                             </TouchableOpacity>
@@ -265,39 +265,39 @@ const BangChamCongScreen = ({ navigation }) => {
     );
 
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: '#f8fafc'}}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             <StatusBar barStyle='dark-content' backgroundColor="#1e40af" />
 
             {/* Header */}
-            <View style={{backgroundColor: '#1e40af', paddingHorizontal: 10, paddingBottom: 10, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, paddingTop: isAndroid15 ? 25 : 10, elevation: 2}}>
-                <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e40af'}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e40af'}}>
-                        <View style={{backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 12, borderRadius: 15, marginRight: 15}}>
+            <View style={{ backgroundColor: '#1e40af', paddingHorizontal: 10, paddingBottom: 10, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, paddingTop: isAndroid15 ? 25 : 10, elevation: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e40af' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e40af' }}>
+                        <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 12, borderRadius: 15, marginRight: 15 }}>
                             <Ionicons name="calendar-outline" size={20} color="white" />
                         </View>
-                        <View style={{backgroundColor: '#1e40af'}}>
-                            <Text style={{fontSize: 18, fontWeight: '800', color: 'white'}}>Bảng Chấm Công</Text>
-                            <Text style={{fontSize: 12, color: 'rgba(255, 255, 255, 0.9)'}}>Quản lý thời gian làm việc</Text>
+                        <View style={{ backgroundColor: '#1e40af' }}>
+                            <Text style={{ fontSize: 18, fontWeight: '800', color: 'white' }}>Bảng Chấm Công</Text>
+                            <Text style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.9)' }}>Quản lý thời gian làm việc</Text>
                         </View>
                     </View>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={{backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 10, borderRadius: 12}}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 10, borderRadius: 12 }}>
                         <Ionicons name="arrow-back" size={20} color="white" />
                     </TouchableOpacity>
                 </View>
             </View>
 
-            <ScrollView style={{flex: 1, backgroundColor: '#f8fafc'}} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ flex: 1, backgroundColor: '#f8fafc' }} showsVerticalScrollIndicator={false}>
                 {/* Date Picker Section */}
-                <View style={{marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 20, padding: 15, elevation: 3, borderWidth: 1, borderColor: '#e2e8f0'}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10, backgroundColor: '#ffffff'}}>
-                        <Ionicons name="filter-outline" size={20} color="#1e40af" style={{marginRight: 8}} />
-                        <Text style={{fontSize: 16, fontWeight: '600', color: '#1e40af'}}>Lọc theo thời gian</Text>
+                <View style={{ marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 20, padding: 15, elevation: 3, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, backgroundColor: '#ffffff' }}>
+                        <Ionicons name="filter-outline" size={20} color="#1e40af" style={{ marginRight: 8 }} />
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e40af' }}>Lọc theo thời gian</Text>
                     </View>
 
-                    <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff'}}>
-                        <View style={{flex: 1, marginRight: 15}}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff' }}>
+                        <View style={{ flex: 1, marginRight: 15 }}>
                             <TextInput
-                                style={{backgroundColor: '#f1f5f9', borderWidth: 2, borderColor: '#e2e8f0', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 12, fontSize: 14, color: '#1e293b', fontWeight: '500'}}
+                                style={{ backgroundColor: '#f1f5f9', borderWidth: 2, borderColor: '#e2e8f0', borderRadius: 15, paddingHorizontal: 15, paddingVertical: 12, fontSize: 14, color: '#1e293b', fontWeight: '500' }}
                                 placeholder='Chọn tháng và năm...'
                                 placeholderTextColor='#64748b'
                                 value={valueDate}
@@ -307,7 +307,7 @@ const BangChamCongScreen = ({ navigation }) => {
 
                         <TouchableOpacity
                             onPress={showDatePicker}
-                            style={{backgroundColor: '#1e40af', padding: 12, borderRadius: 15, elevation: 3}}
+                            style={{ backgroundColor: '#1e40af', padding: 12, borderRadius: 15, elevation: 3 }}
                         >
                             <Ionicons name="calendar" size={24} color="white" />
                         </TouchableOpacity>
@@ -316,24 +316,24 @@ const BangChamCongScreen = ({ navigation }) => {
 
                 {/* Employee Info */}
                 {nameNV ? (
-                    <View style={{marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 16, padding: 10, elevation: 2, borderWidth: 1, borderColor: '#e2e8f0'}}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff'}}>
-                            <View style={{backgroundColor: '#dbeafe', padding: 10, borderRadius: 12, marginRight: 12}}>
+                    <View style={{ marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 16, padding: 10, elevation: 2, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff' }}>
+                            <View style={{ backgroundColor: '#dbeafe', padding: 10, borderRadius: 12, marginRight: 12 }}>
                                 <Ionicons name="person" size={20} color="#1e40af" />
                             </View>
-                            <Text style={{fontSize: 16, fontWeight: '600', color: '#1e293b', flex: 1}}>Nhân viên: {nameNV}</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '600', color: '#1e293b', flex: 1 }}>Nhân viên: {nameNV}</Text>
                         </View>
                     </View>
                 ) : null}
 
                 {/* Data Table */}
-                <View style={{marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 20, overflow: 'hidden', elevation: 2, borderWidth: 1, borderColor: '#e2e8f0'}}>
-                    <View style={{backgroundColor: '#1e40af', paddingVertical: 15, paddingHorizontal: 20}}>
-                        <Text style={{fontSize: 16, fontWeight: '700', color: 'white', textAlign: 'center'}}>Chi Tiết Chấm Công</Text>
+                <View style={{ marginHorizontal: 7, marginTop: 5, backgroundColor: '#ffffff', borderRadius: 20, overflow: 'hidden', elevation: 2, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <View style={{ backgroundColor: '#1e40af', paddingVertical: 15, paddingHorizontal: 20 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: 'white', textAlign: 'center' }}>Chi Tiết Chấm Công</Text>
                     </View>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <View style={{minWidth: 540}}>
+                        <View style={{ minWidth: 540 }}>
                             {renderTableHeader()}
                             <FlatList
                                 data={dataChamCong.slice(from, to)}
@@ -346,76 +346,76 @@ const BangChamCongScreen = ({ navigation }) => {
                 </View>
 
                 {/* Statistics */}
-                <View style={{marginHorizontal: 7, marginTop: 2, marginBottom: 5}}>
-                    <View style={{backgroundColor: '#ffffff', borderRadius: 20, padding: 10, elevation: 4, borderWidth: 1, borderColor: '#e2e8f0'}}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 5, backgroundColor: '#ffffff'}}>
-                            <View style={{backgroundColor: '#dbeafe', padding: 10, borderRadius: 12, marginRight: 12}}>
+                <View style={{ marginHorizontal: 7, marginTop: 2, marginBottom: 5 }}>
+                    <View style={{ backgroundColor: '#ffffff', borderRadius: 20, padding: 10, elevation: 4, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, backgroundColor: '#ffffff' }}>
+                            <View style={{ backgroundColor: '#dbeafe', padding: 10, borderRadius: 12, marginRight: 12 }}>
                                 <Ionicons name="analytics" size={20} color="#1e40af" />
                             </View>
-                            <Text style={{fontSize: 16, fontWeight: '700', color: '#1e293b'}}>Thống Kê Tổng Hợp</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b' }}>Thống Kê Tổng Hợp</Text>
                         </View>
 
-                        <View style={{flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#ffffff'}}>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#ffffff' }}>
                             {/* Tổng phút vào */}
-                            <View style={{width: '49%', backgroundColor: '#dbeafe', borderRadius: 15, padding: 15, marginRight: '1%', marginBottom: 5}}>
-                                <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#dbeafe'}}>
-                                    <Ionicons name="log-in" size={16} color="#1e40af" style={{marginRight: 5}} />
-                                    <Text style={{fontSize: 12, color: '#1e40af', fontWeight: '600'}}>Tổng phút vào</Text>
+                            <View style={{ width: '49%', backgroundColor: '#dbeafe', borderRadius: 15, padding: 15, marginRight: '1%', marginBottom: 5 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#dbeafe' }}>
+                                    <Ionicons name="log-in" size={16} color="#1e40af" style={{ marginRight: 5 }} />
+                                    <Text style={{ fontSize: 12, color: '#1e40af', fontWeight: '600' }}>Tổng phút vào</Text>
                                 </View>
-                                <Text style={{fontSize: 18, fontWeight: '700', color: '#1e40af', marginTop: 8}}>{totalSoPhutVao}</Text>
+                                <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e40af', marginTop: 8 }}>{totalSoPhutVao}</Text>
                             </View>
 
                             {/* Tổng phút ra */}
-                            <View style={{width: '49%', backgroundColor: '#fecaca', borderRadius: 15, padding: 15, marginBottom: 5}}>
-                                <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#fecaca'}}>
-                                    <Ionicons name="log-out" size={16} color="#dc2626" style={{marginRight: 5}} />
-                                    <Text style={{fontSize: 12, color: '#dc2626', fontWeight: '600'}}>Tổng phút ra</Text>
+                            <View style={{ width: '49%', backgroundColor: '#fecaca', borderRadius: 15, padding: 15, marginBottom: 5 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fecaca' }}>
+                                    <Ionicons name="log-out" size={16} color="#dc2626" style={{ marginRight: 5 }} />
+                                    <Text style={{ fontSize: 12, color: '#dc2626', fontWeight: '600' }}>Tổng phút ra</Text>
                                 </View>
-                                <Text style={{fontSize: 18, fontWeight: '700', color: '#dc2626', marginTop: 8}}>{totalSoPhutRa}</Text>
+                                <Text style={{ fontSize: 18, fontWeight: '700', color: '#dc2626', marginTop: 8 }}>{totalSoPhutRa}</Text>
                             </View>
 
                             {/* Tổng phút tăng ca */}
-                            <View style={{width: '49%', backgroundColor: '#d1fae5', borderRadius: 15, padding: 15, marginRight: '1%'}}>
-                                <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#d1fae5'}}>
-                                    <Ionicons name="time" size={16} color="#059669" style={{marginRight: 5}} />
-                                    <Text style={{fontSize: 12, color: '#059669', fontWeight: '600'}}>Phút tăng ca</Text>
+                            <View style={{ width: '49%', backgroundColor: '#d1fae5', borderRadius: 15, padding: 15, marginRight: '1%' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#d1fae5' }}>
+                                    <Ionicons name="time" size={16} color="#059669" style={{ marginRight: 5 }} />
+                                    <Text style={{ fontSize: 12, color: '#059669', fontWeight: '600' }}>Phút tăng ca</Text>
                                 </View>
-                                <Text style={{fontSize: 18, fontWeight: '700', color: '#059669', marginTop: 8}}>{totalTongPhut}</Text>
+                                <Text style={{ fontSize: 18, fontWeight: '700', color: '#059669', marginTop: 8 }}>{totalTongPhut}</Text>
                             </View>
 
                             {/* Tổng ngày công */}
-                            <View style={{width: '49%', backgroundColor: '#fef3c7', borderRadius: 15, padding: 15}}>
-                                <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7'}}>
-                                    <Ionicons name="calendar" size={16} color="#d97706" style={{marginRight: 5}} />
-                                    <Text style={{fontSize: 12, color: '#d97706', fontWeight: '600'}}>Tổng ngày công</Text>
+                            <View style={{ width: '49%', backgroundColor: '#fef3c7', borderRadius: 15, padding: 15 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7' }}>
+                                    <Ionicons name="calendar" size={16} color="#d97706" style={{ marginRight: 5 }} />
+                                    <Text style={{ fontSize: 12, color: '#d97706', fontWeight: '600' }}>Tổng ngày công</Text>
                                 </View>
-                                <Text style={{fontSize: 18, fontWeight: '700', color: '#d97706', marginTop: 8}}>{totalNgayCong}</Text>
+                                <Text style={{ fontSize: 18, fontWeight: '700', color: '#d97706', marginTop: 8 }}>{totalNgayCong}</Text>
                             </View>
                         </View>
                     </View>
                 </View>
 
                 {/* Pagination */}
-                <View style={{marginHorizontal: 7, marginBottom: 10, backgroundColor: '#ffffff', borderRadius: 15, padding: 15, elevation: 2, borderWidth: 1, borderColor: '#e2e8f0'}}>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                <View style={{ marginHorizontal: 7, marginBottom: 10, backgroundColor: '#ffffff', borderRadius: 15, padding: 15, elevation: 2, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <TouchableOpacity
                             onPress={() => setPage(Math.max(0, page - 1))}
                             disabled={page === 0}
-                            style={{backgroundColor: page === 0 ? '#e2e8f0' : '#1e40af', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10}}
+                            style={{ backgroundColor: page === 0 ? '#e2e8f0' : '#1e40af', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10 }}
                         >
-                            <Text style={{color: page === 0 ? '#64748b' : 'white', fontWeight: '600'}}>Trước</Text>
+                            <Text style={{ color: page === 0 ? '#64748b' : 'white', fontWeight: '600' }}>Trước</Text>
                         </TouchableOpacity>
 
-                        <Text style={{color: '#1e293b', fontWeight: '600'}}>
+                        <Text style={{ color: '#1e293b', fontWeight: '600' }}>
                             {from + 1}-{to} của {dataChamCong.length}
                         </Text>
 
                         <TouchableOpacity
                             onPress={() => setPage(Math.min(totalPages - 1, page + 1))}
                             disabled={page >= totalPages - 1}
-                            style={{backgroundColor: page >= totalPages - 1 ? '#e2e8f0' : '#1e40af', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10}}
+                            style={{ backgroundColor: page >= totalPages - 1 ? '#e2e8f0' : '#1e40af', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10 }}
                         >
-                            <Text style={{color: page >= totalPages - 1 ? '#64748b' : 'white', fontWeight: '600'}}>Sau</Text>
+                            <Text style={{ color: page >= totalPages - 1 ? '#64748b' : 'white', fontWeight: '600' }}>Sau</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
