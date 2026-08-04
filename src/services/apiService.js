@@ -148,8 +148,97 @@ const apiPushNotiSuper = async (device_token, notificationType, customMessage) =
     return response.data;
 };
 
-const apiUpdateNoiDung = async (id, noi_dung) => { //api cap nhat vi tri 
+const apiUpdateNoiDung = async (id, noi_dung) => { //api cap nhat vi tri
     const response = await api.put(`/jobs/${id}`, { noi_dung });
+    return response.data;
+};
+
+// ===== Báo cáo quên chấm công =====
+const apiCreateAttendanceReport = async (payload) => { //api nhan vien tao bao cao quen cham cong
+    const response = await api.post('/attendance-reports', payload);
+    return response.data;
+};
+
+const apiGetAttendanceReports = async (params = {}) => { //api lay danh sach bao cao quen cham cong
+    const response = await api.get('/attendance-reports', { params });
+    return response.data;
+};
+
+const apiGetAttendanceReportById = async (id) => {
+    const response = await api.get(`/attendance-reports/${id}`);
+    return response.data;
+};
+
+const apiApproveAttendanceReport = async (id) => { //admin only
+    const response = await api.put(`/attendance-reports/${id}/approve`);
+    return response.data;
+};
+
+const apiRejectAttendanceReport = async (id, reject_reason) => { //admin only
+    const response = await api.put(`/attendance-reports/${id}/reject`, { reject_reason });
+    return response.data;
+};
+
+// ===== Báo cáo tăng ca =====
+const apiCreateOvertimeReport = async (payload) => { //api nhan vien tao bao cao tang ca
+    const response = await api.post('/overtime-reports', payload);
+    return response.data;
+};
+
+const apiGetOvertimeReports = async (params = {}) => { //api lay danh sach bao cao tang ca
+    const response = await api.get('/overtime-reports', { params });
+    return response.data;
+};
+
+const apiGetOvertimeReportById = async (id) => {
+    const response = await api.get(`/overtime-reports/${id}`);
+    return response.data;
+};
+
+const apiApproveOvertimeReport = async (id) => { //admin only
+    const response = await api.put(`/overtime-reports/${id}/approve`);
+    return response.data;
+};
+
+const apiRejectOvertimeReport = async (id, reject_reason) => { //admin only
+    const response = await api.put(`/overtime-reports/${id}/reject`, { reject_reason });
+    return response.data;
+};
+
+// ===== Loại nghỉ phép =====
+const apiGetLeaveTypes = async () => { //api lay danh sach loai nghi phep (active) cho moi user
+    const response = await api.get('/leave-types');
+    return response.data;
+};
+
+const apiGetAllLeaveTypes = async () => { //admin only, gom ca inactive
+    const response = await api.get('/leave-types/all');
+    return response.data;
+};
+
+// ===== Xin nghỉ phép =====
+const apiCreateLeaveRequest = async (payload) => { //api nhan vien tao don xin nghi phep
+    const response = await api.post('/leave-requests', payload);
+    return response.data;
+};
+
+const apiGetLeaveRequests = async (params = {}) => { //api lay danh sach don xin nghi phep
+    const response = await api.get('/leave-requests', { params });
+    return response.data;
+};
+
+const apiGetLeaveRequestById = async (id) => {
+    const response = await api.get(`/leave-requests/${id}`);
+    return response.data;
+};
+
+const apiApproveLeaveRequest = async (id) => { //admin only
+    const response = await api.put(`/leave-requests/${id}/approve`);
+    return response.data;
+};
+
+const apiRejectLeaveRequest = async (id, reject_reason) => { //admin only
+    const response = await api.put(`/leave-requests/${id}/reject`, { reject_reason });
     return response.data;
 };
 
@@ -182,5 +271,22 @@ export {
     apiGetCongTrinhViecMoi,
     apiDeleteJob,
     apiPushNotiSuper,
-    apiUpdateNoiDung
+    apiUpdateNoiDung,
+    apiCreateAttendanceReport,
+    apiGetAttendanceReports,
+    apiGetAttendanceReportById,
+    apiApproveAttendanceReport,
+    apiRejectAttendanceReport,
+    apiCreateOvertimeReport,
+    apiGetOvertimeReports,
+    apiGetOvertimeReportById,
+    apiApproveOvertimeReport,
+    apiRejectOvertimeReport,
+    apiGetLeaveTypes,
+    apiGetAllLeaveTypes,
+    apiCreateLeaveRequest,
+    apiGetLeaveRequests,
+    apiGetLeaveRequestById,
+    apiApproveLeaveRequest,
+    apiRejectLeaveRequest
 };

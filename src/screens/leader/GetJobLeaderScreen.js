@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, Platform, Image, Alert, ActivityIndicator, StatusBar, TouchableOpacity, TextInput, ScrollView, Modal, TouchableWithoutFeedback, Keyboard, Dimensions } from 'react-native';
+import { Text, View, Platform, Image, Alert, ActivityIndicator, StatusBar, TouchableOpacity, TextInput, ScrollView, Modal, TouchableWithoutFeedback, Keyboard, Dimensions, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiGetJob, apiFinishJob, apiUpdateToaDo, apiUpdateStatusUser, apiGetJobHistory, apiCheckStatusUser } from '../../services/apiService';
+import { CONG_TRINH_DEPARTMENT } from '../../constants/reportsConfig';
 
 const { width } = Dimensions.get('window');
 const isAndroid15 = Platform.OS === 'android' && Platform.Version >= 35;
 
-const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setValueJob, idJob, setIdJob, onLogout }) => {
+const GetJobLeaderScreen = ({ navigation, route, isGetJob, setIsGetJob, valueJob, setValueJob, idJob, setIdJob, onLogout }) => {
     const [txtGhiChu, setTxtGhiChu] = useState('');
     const [showMenuModal, setShowMenuModal] = useState(false);
     const [isLoadingFinish, setIsLoadingFinish] = useState(false);
@@ -56,6 +57,19 @@ const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setVa
             if (intervalId) clearInterval(intervalId);
         };
     }, [isGetJob]);
+
+    // App bị đẩy xuống nền (chưa kill) rồi mở lại: màn hình không mount lại nên không có gì tự
+    // fetch lại trạng thái. Bắt sự kiện app quay lại foreground để tự làm mới.
+    useEffect(() => {
+        if (!userID) return;
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+                getHistoryJob(userID);
+                checkUserStatus(userID);
+            }
+        });
+        return () => subscription.remove();
+    }, [userID]);
 
     const checkUserStatus = async (userID) => {
         try {
@@ -105,6 +119,9 @@ const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setVa
             if (filteredData.length > 0) {
                 setValueJob(filteredData[0].noi_dung);
                 setIdJob(filteredData[0].id);
+            } else {
+                setValueJob('');
+                setIdJob('');
             }
         } catch (error) {
             console.error('Lỗi lấy lịch sử Job:', error);
@@ -192,7 +209,12 @@ const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setVa
 
     const handleReload = async () => {
         try {
-            const id = await AsyncStorage.getItem('userID');
+            let id;
+            if (route && route.params && route.params.userIDD) {
+                id = route.params.userIDD;
+            } else {
+                id = await AsyncStorage.getItem('userID');
+            }
             if (id) {
                 setUserID(id);
                 getHistoryJob(id);
@@ -224,6 +246,8 @@ const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setVa
             case 'timesheet': navigation.navigate('BangChamCong'); break;
             case 'changePassword': navigation.navigate('ChangePass'); break;
             case 'appInfo': navigation.navigate('AppInfo'); break;
+            case 'reportsHub': navigation.navigate('ReportsHub'); break;
+            case 'leaveForTeam': navigation.navigate('LeaveRequestForTeamForm'); break;
             case 'logout': handleLogout(); break;
         }
     };
@@ -258,6 +282,8 @@ const GetJobLeaderScreen = ({ navigation, isGetJob, setIsGetJob, valueJob, setVa
         const menuOptions = [
             { key: 'history', title: 'Lịch sử công việc', icon: 'time-outline', color: '#06d6a0' },
             { key: 'timesheet', title: 'Bảng chấm công', icon: 'calendar-outline', color: '#118ab2' },
+            { key: 'reportsHub', title: 'Báo cáo & Nghỉ phép', icon: 'document-text-outline', color: '#8b5cf6' },
+            ...(job === CONG_TRINH_DEPARTMENT ? [{ key: 'leaveForTeam', title: 'Viết đơn nghỉ phép cho NV', icon: 'people-outline', color: '#a855f7' }] : []),
             { key: 'changePassword', title: 'Đổi mật khẩu', icon: 'lock-closed-outline', color: '#ffd166' },
             { key: 'appInfo', title: 'Thông tin ứng dụng', icon: 'information-circle-outline', color: '#3b82f6' },
             { key: 'logout', title: 'Đăng xuất', icon: 'log-out-outline', color: '#ff6b6b' },

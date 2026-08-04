@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, Modal, TouchableWithoutFeedback, Image, Alert, ActivityIndicator, TouchableOpacity, StatusBar, TextInput, FlatList, Keyboard, Platform, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { apiGetCongTrinhViecMoi, apiGetMayTinhViecMoi, apiGetPhotoViecMoi, apiDeleteJob, apiUpdateNoiDung, apiUpdateStatusUser, apiPushNotiSuper } from '../../services/apiService';
+import { apiGetCongTrinhViecMoi, apiGetMayTinhViecMoi, apiGetPhotoViecMoi, apiGetJobHistory, apiDeleteJob, apiUpdateNoiDung, apiUpdateStatusUser, apiPushNotiSuper } from '../../services/apiService';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -34,16 +34,14 @@ const JobWorkingScreen = ({ navigation, team }) => {
                 const data = await apiGetPhotoViecMoi();
                 setDataWorking(data.data);
             } else {
-                const [mayTinhData, congTrinhData, photocopyData] = await Promise.all([
-                    apiGetMayTinhViecMoi(),
-                    apiGetCongTrinhViecMoi(),
-                    apiGetPhotoViecMoi()
-                ]);
-                const combinedData = [
-                    ...(mayTinhData.data || []),
-                    ...(congTrinhData.data || []),
-                    ...(photocopyData.data || [])
-                ];
+                // Đội Dự án lấy nhân sự chéo từ 4 phòng ban (giống AssignJobScreen.getAllUser) và
+                // không có API "việc mới" riêng cho Dự án — dùng apiGetJobHistory (toàn bộ job) rồi
+                // tự lọc việc đang làm (end === null) của đúng 4 phòng ban đó.
+                const targetDepartments = ['Dự án', 'Máy tính', 'Công trình', 'Photocopy'];
+                const res = await apiGetJobHistory();
+                const combinedData = (res.data || [])
+                    .filter(item => item.end === null && targetDepartments.includes(item.department))
+                    .map(item => ({ ...item, status: item.end === null ? 1 : 0 }));
                 setDataWorking(combinedData);
             }
         } catch (error) {

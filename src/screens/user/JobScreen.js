@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Text, View, Alert, ActivityIndicator, StatusBar, TouchableOpacity, TextInput, Modal, ScrollView, Image } from 'react-native';
+import { Text, View, Alert, ActivityIndicator, StatusBar, TouchableOpacity, TextInput, Modal, ScrollView, Image, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import socketService from '../../services/socketService';
 import { apiCheckStatusUser, apiFinishJob, apiGetJob, apiGetJobHistory, apiGetUserInfo, apiUpdateStatusUser, apiUpdateToaDo } from '../../services/apiService';
 import ExpoGoWarning from '../../components/ExpoGoWarning';
+import { canViewAllReports } from '../../constants/reportsConfig';
 
 const JobScreen = ({ navigation, route, onLogout }) => {
     const insets = useSafeAreaInsets();
@@ -126,6 +128,35 @@ const JobScreen = ({ navigation, route, onLogout }) => {
         };
 
     }, [isGetJob]);
+
+    // Kênh dự phòng khi socket 'jobsent' không tới (không có nơi nào trong app emit sự kiện này,
+    // chắc là do backend bắn) — dùng luôn push notification (đã xác nhận tới được) để làm mới
+    // giao diện công việc lúc app đang mở.
+    useEffect(() => {
+        if (!userID) return;
+        const subscription = Notifications.addNotificationReceivedListener((notification) => {
+            const type = notification?.request?.content?.data?.type;
+            if (['new_job', 'update_job', 'edit_job', 'delete_job'].includes(type)) {
+                getHistoryJob(userID);
+                checkUserStatus(userID);
+            }
+        });
+        return () => subscription.remove();
+    }, [userID]);
+
+    // App bị đẩy xuống nền (chưa kill) rồi mở lại: màn hình KHÔNG mount lại nên effect lúc mount
+    // không tự chạy, và notification-listener ở trên cũng không đảm bảo bắt được lúc app đang ở nền
+    // (đặc biệt iOS hạn chế JS chạy nền). Bắt sự kiện app quay lại foreground để tự làm mới.
+    useEffect(() => {
+        if (!userID) return;
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+                getHistoryJob(userID);
+                checkUserStatus(userID);
+            }
+        });
+        return () => subscription.remove();
+    }, [userID]);
 
     const getHistoryJob = async (id) => {
         try {
@@ -351,6 +382,12 @@ const JobScreen = ({ navigation, route, onLogout }) => {
                 // Navigate to app info screen
                 navigation.navigate('AppInfo');
                 break;
+            case 'reportsHub':
+                navigation.navigate('ReportsHub');
+                break;
+            case 'viewAllReports':
+                navigation.navigate('AdminApprovals');
+                break;
             case 'logout':
                 handleLogout();
                 break;
@@ -439,6 +476,8 @@ const JobScreen = ({ navigation, route, onLogout }) => {
         const menuOptions = [
             { key: 'history', title: 'Lịch sử công việc', icon: 'time-outline', color: '#06d6a0' },
             { key: 'timesheet', title: 'Bảng chấm công', icon: 'calendar-outline', color: '#118ab2' },
+            { key: 'reportsHub', title: 'Báo cáo & Nghỉ phép', icon: 'document-text-outline', color: '#8b5cf6' },
+            ...(canViewAllReports(userID, job) ? [{ key: 'viewAllReports', title: 'Xem báo cáo toàn công ty', icon: 'eye-outline', color: '#06b6d4' }] : []),
             { key: 'changePassword', title: 'Đổi mật khẩu', icon: 'lock-closed-outline', color: '#ffd166' },
             { key: 'appInfo', title: 'Thông tin ứng dụng', icon: 'information-circle-outline', color: '#3b82f6' },
             { key: 'logout', title: 'Đăng xuất', icon: 'log-out-outline', color: '#ff6b6b' },

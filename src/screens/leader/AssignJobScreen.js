@@ -5,6 +5,8 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiGetAllUser, apiGiaoJob, apiUpdateStatusUser, apiPushNotiSuper, apiGetUserInfo } from '../../services/apiService';
 import ModalSelectEmployee from './components/ModalSelectEmployee';
+import { CONG_TRINH_DEPARTMENT } from '../../constants/reportsConfig';
+import socketService from '../../services/socketService';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -38,6 +40,9 @@ const AssignJobScreen = ({ navigation, job, onLogout }) => {
             }
         };
         fetchUserID();
+
+        socketService.connect();
+        return () => { socketService.disconnect(); };
     }, [job]);
 
     const getAllUser = async (job) => {
@@ -67,6 +72,8 @@ const AssignJobScreen = ({ navigation, job, onLogout }) => {
                     item.id === id ? { ...item, status: -1 } : item
                 )
             );
+            socketService.emit('sendJob', { message: 'Toi da giao Job' });
+            socketService.emit('getJob', { message: 'Toi da nhan Job' });
             await updateStatusUser(id, -1);
             if (deviceToken) {
                 await apiPushNotiSuper(deviceToken, notificationType, customMessage);
@@ -112,6 +119,8 @@ const AssignJobScreen = ({ navigation, job, onLogout }) => {
             case 'timesheet': navigation.navigate('BangChamCong'); break;
             case 'changePassword': navigation.navigate('ChangePass'); break;
             case 'appInfo': navigation.navigate('AppInfo'); break;
+            case 'reportsHub': navigation.navigate('ReportsHub'); break;
+            case 'leaveForTeam': navigation.navigate('LeaveRequestForTeamForm'); break;
             case 'logout': handleLogout(); break;
         }
     };
@@ -146,6 +155,8 @@ const AssignJobScreen = ({ navigation, job, onLogout }) => {
         const menuOptions = [
             { key: 'history', title: 'Lịch sử công việc', icon: 'time-outline', color: '#06d6a0' },
             { key: 'timesheet', title: 'Bảng chấm công', icon: 'calendar-outline', color: '#118ab2' },
+            { key: 'reportsHub', title: 'Báo cáo & Nghỉ phép', icon: 'document-text-outline', color: '#8b5cf6' },
+            ...(job === CONG_TRINH_DEPARTMENT ? [{ key: 'leaveForTeam', title: 'Viết đơn nghỉ phép cho NV', icon: 'people-outline', color: '#a855f7' }] : []),
             { key: 'changePassword', title: 'Đổi mật khẩu', icon: 'lock-closed-outline', color: '#ffd166' },
             { key: 'appInfo', title: 'Thông tin ứng dụng', icon: 'information-circle-outline', color: '#3b82f6' },
             { key: 'logout', title: 'Đăng xuất', icon: 'log-out-outline', color: '#ff6b6b' },

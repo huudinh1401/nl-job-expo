@@ -10,6 +10,19 @@ import AppInfoScreen from '../screens/common/AppInfoScreen';
 // Admin screens
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import AdminHistoryScreen from '../screens/admin/AdminHistoryScreen';
+import AdminTeamHistoryScreen from '../screens/admin/AdminTeamHistoryScreen';
+import AdminTeamWorkingScreen from '../screens/admin/AdminTeamWorkingScreen';
+import AdminNotificationsScreen from '../screens/admin/AdminNotificationsScreen';
+import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
+import AdminApprovalsScreen from '../screens/admin/AdminApprovalsScreen';
+// Reports screens (báo cáo quên chấm công / tăng ca / xin nghỉ phép)
+import ReportsHubScreen from '../screens/reports/ReportsHubScreen';
+import ReportListScreen from '../screens/reports/ReportListScreen';
+import ReportDetailScreen from '../screens/reports/ReportDetailScreen';
+import AttendanceReportFormScreen from '../screens/reports/AttendanceReportFormScreen';
+import OvertimeReportFormScreen from '../screens/reports/OvertimeReportFormScreen';
+import LeaveRequestFormScreen from '../screens/reports/LeaveRequestFormScreen';
+import LeaveRequestForTeamFormScreen from '../screens/reports/LeaveRequestForTeamFormScreen';
 // Leader screens
 import JobLeaderMainScreen from '../screens/leader/JobLeaderMainScreen';
 import ChamCongScreen from '../screens/common/ChamCongScreen';
@@ -64,7 +77,8 @@ const AppNavigator = ({
                 initialRouteName={getInitialRouteName()}
                 screenOptions={{
                     headerShown: false,
-                    cardStyle: { backgroundColor: '#0f172a' }}}
+                    cardStyle: { backgroundColor: '#0f172a' }
+                }}
             >
                 {/* Splash Screen - chỉ hiển thị khi showSplash = true */}
                 {showSplash && (
@@ -143,6 +157,25 @@ const AppNavigator = ({
                 <Stack.Screen name="AppInfo" component={AppInfoScreen} />
                 <Stack.Screen name="ChamCong" component={ChamCongScreen} />
                 <Stack.Screen name="AdminHistoryScreen" component={AdminHistoryScreen} />
+                <Stack.Screen name="AdminTeamHistory" component={AdminTeamHistoryScreen} />
+                <Stack.Screen name="AdminTeamWorking" component={AdminTeamWorkingScreen} />
+                <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} />
+                <Stack.Screen name="AdminProfile">
+                    {(props) => (
+                        <AdminProfileScreen
+                            {...props}
+                            onLogout={onLogout}
+                        />
+                    )}
+                </Stack.Screen>
+                <Stack.Screen name="AdminApprovals" component={AdminApprovalsScreen} />
+                <Stack.Screen name="ReportsHub" component={ReportsHubScreen} />
+                <Stack.Screen name="ReportList" component={ReportListScreen} />
+                <Stack.Screen name="ReportDetail" component={ReportDetailScreen} />
+                <Stack.Screen name="AttendanceReportForm" component={AttendanceReportFormScreen} />
+                <Stack.Screen name="OvertimeReportForm" component={OvertimeReportFormScreen} />
+                <Stack.Screen name="LeaveRequestForm" component={LeaveRequestFormScreen} />
+                <Stack.Screen name="LeaveRequestForTeamForm" component={LeaveRequestForTeamFormScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
