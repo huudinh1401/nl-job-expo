@@ -56,7 +56,7 @@ const AdminTeamHistoryScreen = ({ navigation, route }) => {
     };
 
     const ItemView = ({ item, index }) => (
-        <View style={{ marginHorizontal: 12, marginVertical: 6, backgroundColor: '#374151', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#475569' }}>
+        <View style={{ marginHorizontal: 12, marginVertical: 6, backgroundColor: '#ffffff', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{ width: 30, height: 30, backgroundColor: team.color, borderRadius: 15, justifyContent: 'center', alignItems: 'center' }}>
                     <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>{index + 1}</Text>
@@ -64,15 +64,15 @@ const AdminTeamHistoryScreen = ({ navigation, route }) => {
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 15 }}>
                     <Image source={{ uri: item.avatar }} style={{ width: 45, height: 45, borderRadius: 22 }} />
                     <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>{item.name}</Text>
+                        <Text style={{ color: '#1e293b', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>{item.name}</Text>
                         <View style={{ backgroundColor: team.color, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' }}>
                             <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '600' }}>{item.department}</Text>
                         </View>
                     </View>
                 </View>
             </View>
-            <View style={{ marginTop: 15, backgroundColor: 'rgba(99, 102, 241, 0.1)', borderRadius: 15, padding: 12, borderWidth: 1, borderColor: 'rgba(99, 102, 241, 0.3)' }}>
-                <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '600', lineHeight: 20, textAlign: 'center' }}>{item.noi_dung}</Text>
+            <View style={{ marginTop: 15, backgroundColor: '#f1f5f9', borderRadius: 15, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                <Text style={{ color: '#334155', fontSize: 13, fontWeight: '600', lineHeight: 20, textAlign: 'center' }}>{item.noi_dung}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 12 }}>
                 <View style={{ backgroundColor: '#10b981', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, flex: item.end ? 0.45 : 1, alignItems: 'center' }}>
@@ -90,33 +90,33 @@ const AdminTeamHistoryScreen = ({ navigation, route }) => {
     );
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#1e293b' }}>
-                <StatusBar barStyle='light-content' backgroundColor="#0f172a" />
-                <View style={{ backgroundColor: '#0f172a', paddingHorizontal: 15, paddingBottom: 15, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, paddingTop: isAndroid15 ? 35 : 10 }}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+                <StatusBar barStyle='light-content' backgroundColor={team.color} />
+                <View style={{ backgroundColor: team.color, paddingHorizontal: 15, paddingBottom: 15, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, paddingTop: isAndroid15 ? 35 : 10 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={{ backgroundColor: team.color, padding: 7, borderRadius: 15, marginRight: 15 }}>
+                            <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 7, borderRadius: 15, marginRight: 15 }}>
                                 <Ionicons name={team.icon} size={24} color="#ffffff" />
                             </View>
                             <View>
                                 <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff' }}>Lịch Sử Công Việc</Text>
-                                <Text style={{ fontSize: 14, color: '#a5b4fc' }}>Đội {team.label}</Text>
+                                <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.85)' }}>Đội {team.label}</Text>
                             </View>
                         </View>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: team.color, padding: 8, borderRadius: 12 }}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: 8, borderRadius: 12 }}>
                             <Ionicons name="arrow-back" size={20} color="#ffffff" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                <View style={{ marginHorizontal: 12, marginTop: 10, backgroundColor: '#374151', borderRadius: 20, padding: 15 }}>
-                    <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '600', marginBottom: 8 }}>Chọn ngày</Text>
+                <View style={{ marginHorizontal: 12, marginTop: 10, backgroundColor: '#ffffff', borderRadius: 20, padding: 15, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '600', marginBottom: 8 }}>Chọn ngày</Text>
                     <TouchableOpacity
                         onPress={() => setDatePickerVisibility(true)}
-                        style={{ flexDirection: 'row', backgroundColor: '#475569', borderRadius: 15, borderWidth: 2, borderColor: team.color, alignItems: 'center', paddingHorizontal: 12, height: 45, justifyContent: 'space-between' }}
+                        style={{ flexDirection: 'row', backgroundColor: '#f8fafc', borderRadius: 15, borderWidth: 2, borderColor: team.color, alignItems: 'center', paddingHorizontal: 12, height: 45, justifyContent: 'space-between' }}
                     >
-                        <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '500' }}>{valueDate}</Text>
+                        <Text style={{ color: '#1e293b', fontSize: 14, fontWeight: '500' }}>{valueDate}</Text>
                         <Ionicons name="calendar-outline" size={22} color={team.color} />
                     </TouchableOpacity>
                     {isDatePickerVisible && (
@@ -129,10 +129,10 @@ const AdminTeamHistoryScreen = ({ navigation, route }) => {
                         <FlatList data={history} keyExtractor={(item, index) => index.toString()} renderItem={ItemView} showsVerticalScrollIndicator={false} />
                     ) : (
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <View style={{ backgroundColor: '#374151', padding: 30, borderRadius: 20, alignItems: 'center' }}>
-                                <Ionicons name="briefcase-outline" size={60} color="#6b7280" />
-                                <Text style={{ color: '#9ca3af', fontSize: 16, fontWeight: '600', marginTop: 15, textAlign: 'center' }}>Không có dữ liệu</Text>
-                                <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 5, textAlign: 'center' }}>Thử chọn ngày khác</Text>
+                            <View style={{ backgroundColor: '#ffffff', padding: 30, borderRadius: 20, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                <Ionicons name="briefcase-outline" size={60} color="#cbd5e1" />
+                                <Text style={{ color: '#64748b', fontSize: 16, fontWeight: '600', marginTop: 15, textAlign: 'center' }}>Không có dữ liệu</Text>
+                                <Text style={{ color: '#94a3b8', fontSize: 12, marginTop: 5, textAlign: 'center' }}>Thử chọn ngày khác</Text>
                             </View>
                         </View>
                     )}

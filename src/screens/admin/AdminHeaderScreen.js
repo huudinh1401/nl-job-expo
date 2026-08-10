@@ -13,9 +13,9 @@ const AdminHeaderScreen = () => {
 
     return (
         <View style={{ height: 60, width: '100%' }}>
-            <View style={{ flexDirection: 'row', height: 60, width: '100%', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: 16, paddingHorizontal: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
+            <View style={{ flexDirection: 'row', height: 60, width: '100%', alignItems: 'center', backgroundColor: '#1e40af', borderRadius: 16, paddingHorizontal: 16, shadowColor: '#1e40af', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 6 }}>
                 {/* Admin Icon */}
-                <View style={{ width: 40, height: 40, backgroundColor: '#3b82f6', borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                <View style={{ width: 40, height: 40, backgroundColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
                     <Ionicons name="shield-checkmark" size={22} color="#ffffff" />
                 </View>
 
@@ -24,7 +24,7 @@ const AdminHeaderScreen = () => {
                     <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold', fontFamily: 'Inter' }}>
                         Admin{username ? ` - ${username}` : ''}
                     </Text>
-                    <Text style={{ color: '#94a3b8', fontSize: 12, fontWeight: '500', fontFamily: 'Inter' }}>Quản lý công việc</Text>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 12, fontWeight: '500', fontFamily: 'Inter' }}>Quản lý công việc</Text>
                 </View>
             </View>
         </View>

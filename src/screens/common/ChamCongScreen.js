@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, Platform, Image, Alert, ActivityIndicator, StatusBar, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiAddChamCong, apiStatusChamcongOfUser, apiUpdateChamCong } from '../../services/apiService';
 import { apiRecognizeFace } from '../../services/apiServiceCheckFace';
 import ScanAnimation from '../../components/ScanAnimation';
+import WatermarkCapture from '../../components/WatermarkCapture';
+import locationLabel from '../../utils/locationLabel';
 
 const { width } = Dimensions.get('window');
 const isAndroid15 = Platform.OS === 'android' && Platform.Version >= 35;
@@ -26,6 +28,9 @@ const ChamCongScreen = ({ navigation }) => {
     const [isGettingLocation, setIsGettingLocation] = useState(false);
     const [pendingAttendance, setPendingAttendance] = useState(null);
     const [failedRecognitionCount, setFailedRecognitionCount] = useState(0);
+    const [mode, setMode] = useState('company');
+    const [isProcessingImage, setIsProcessingImage] = useState(false);
+    const watermarkRef = useRef(null);
 
     const companyLocation = { latitude: 10.94891129807376, longitude: 108.10797949667753 };
     const companyLocationB = { latitude: 10.943390611557195, longitude: 108.10412553364621 };
@@ -101,14 +106,11 @@ const ChamCongScreen = ({ navigation }) => {
     const chamCongVao = async (image, toa_do, thoiGianVao, user_id) => {
         try {
             const formData = new FormData();
-            if (user_id === '78') {
-                formData.append('image', { uri: 'https://apijob.nguyenluan.vn/images/aNam.jpg', name: 'aNam.jpg', type: 'image/jpeg' });
-            } else {
-                formData.append('image', { uri: image, name: 'photo.jpg', type: 'image/jpeg' });
-            }
+            formData.append('image', { uri: image, name: 'photo.jpg', type: 'image/jpeg' });
             formData.append('toa_do', toa_do);
             formData.append('thoiGianVao', thoiGianVao);
             formData.append('user_id', user_id);
+            formData.append('loai_cham_cong', mode === 'company' ? 'tai_cong_ty' : 'ngoai_cong_ty');
             const res = await apiAddChamCong(formData);
             setIdChamCong(res.data.id);
             setStatus(true);
@@ -127,13 +129,10 @@ const ChamCongScreen = ({ navigation }) => {
     const chamCongVe = async (toa_do_ra, thoiGianRa, image_ra) => {
         try {
             const formData = new FormData();
-            if (userID === '78') {
-                formData.append('image_ra', { uri: 'https://apijob.nguyenluan.vn/images/aNam.jpg', name: 'aNam.jpg', type: 'image/jpeg' });
-            } else {
-                formData.append('image_ra', { uri: image_ra, name: 'photo.jpg', type: 'image/jpeg' });
-            }
+            formData.append('image_ra', { uri: image_ra, name: 'photo.jpg', type: 'image/jpeg' });
             formData.append('toa_do_ra', toa_do_ra);
             formData.append('thoiGianRa', thoiGianRa);
+            formData.append('loai_cham_cong', mode === 'company' ? 'tai_cong_ty' : 'ngoai_cong_ty');
             const res = await apiUpdateChamCong(idChamCong, formData);
             setImageUri('');
             Alert.alert('Thông báo!', 'Bạn đã điểm danh về thành công!', [{ text: 'OK', onPress: () => { navigation.goBack() } }]);
@@ -277,6 +276,11 @@ const ChamCongScreen = ({ navigation }) => {
         }
     };
 
+    const resetChamCongLoading = () => {
+        if (status === false) { setIsLoadingVao(false); }
+        else { setIsLoadingVe(false); }
+    };
+
     const handleChamCong = async () => {
         if (!imageUri && userID !== '78') {
             Alert.alert('Lỗi', 'Vui lòng chụp ảnh trước khi chấm công!');
@@ -287,18 +291,29 @@ const ChamCongScreen = ({ navigation }) => {
         else { setIsLoadingVe(true); }
 
         setIsGettingLocation(true);
+
+        let userLocation;
         try {
             let { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
             if (locationStatus !== 'granted') {
                 Alert.alert('Lỗi', 'Cần quyền truy cập vị trí để chấm công!');
-                if (status === false) { setIsLoadingVao(false); }
-                else { setIsLoadingVe(false); }
                 setIsGettingLocation(false);
+                resetChamCongLoading();
                 return;
             }
 
             const location = await Location.getCurrentPositionAsync({});
-            const userLocation = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+            userLocation = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+        } catch (error) {
+            setIsGettingLocation(false);
+            console.error('Lỗi lấy vị trí: ', error);
+            Alert.alert('Lỗi lấy vị trí', 'Không thể lấy vị trí hiện tại. Vui lòng thử lại.');
+            resetChamCongLoading();
+            setPendingAttendance(null);
+            return;
+        }
+
+        if (mode === 'company') {
             const distance = haversineDistance(userLocation, companyLocation);
             const distanceB = haversineDistance(userLocation, companyLocationB);
 
@@ -310,17 +325,36 @@ const ChamCongScreen = ({ navigation }) => {
             } else {
                 setIsGettingLocation(false);
                 Alert.alert('Điểm danh lỗi', 'Bạn đang cách công ty > 30m!');
-                if (status === false) { setIsLoadingVao(false); }
-                else { setIsLoadingVe(false); }
+                resetChamCongLoading();
                 setPendingAttendance(null);
             }
+            return;
+        }
+
+        // Chế độ ngoài công ty: bỏ qua khoảng cách + xác thực khuôn mặt, gắn vị trí/khu vực/giờ lên ảnh thay thế.
+        setIsGettingLocation(false);
+        setIsProcessingImage(true);
+        try {
+            const currentTime = getCurrentDateTime();
+            const area = await locationLabel.getAreaLabel(userLocation.latitude, userLocation.longitude);
+            const watermarkLines = [
+                `Vị trí: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`,
+                `Khu vực: ${area}`,
+                `Thời gian: ${currentTime}`,
+            ];
+            const watermarkedUri = await watermarkRef.current.capture(imageUri, watermarkLines);
+
+            if (status === false) {
+                await chamCongVao(watermarkedUri, `${userLocation.latitude}, ${userLocation.longitude}`, currentTime, userID);
+            } else {
+                await chamCongVe(`${userLocation.latitude}, ${userLocation.longitude}`, currentTime, watermarkedUri);
+            }
         } catch (error) {
-            setIsGettingLocation(false);
-            console.error('Lỗi lấy vị trí: ', error);
-            Alert.alert('Lỗi lấy vị trí', 'Không thể lấy vị trí hiện tại. Vui lòng thử lại.');
-            if (status === false) { setIsLoadingVao(false); }
-            else { setIsLoadingVe(false); }
-            setPendingAttendance(null);
+            console.error('Lỗi xử lý ảnh chấm công ngoài công ty: ', error);
+            Alert.alert('Lỗi', 'Không thể xử lý ảnh chấm công. Vui lòng thử lại.');
+            resetChamCongLoading();
+        } finally {
+            setIsProcessingImage(false);
         }
     };
 
@@ -359,10 +393,10 @@ const ChamCongScreen = ({ navigation }) => {
             <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
                 <SafeAreaView style={{ flex: 1 }}>
                     <StatusBar barStyle='light-content' backgroundColor="#0f172a" />
-                    <View style={{ height: 50, backgroundColor: '#1e3a8a', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, marginTop: isAndroid15 ? 35 : 0, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
+                    <View style={{ height: 44, backgroundColor: '#1e3a8a', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, marginTop: isAndroid15 ? 35 : 0, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <MaterialIcons name="access-time" size={24} color="#10b981" style={{ marginRight: 8 }} />
-                            <Text style={{ color: '#f1f5f9', fontSize: 18, fontWeight: 'bold' }}>Chấm Công</Text>
+                            <MaterialIcons name="access-time" size={22} color="#10b981" style={{ marginRight: 8 }} />
+                            <Text style={{ color: '#f1f5f9', fontSize: 17, fontWeight: 'bold' }}>Chấm Công</Text>
                         </View>
                     </View>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -377,61 +411,80 @@ const ChamCongScreen = ({ navigation }) => {
         );
     }
 
+    const isBusy = isLoadingVao || isLoadingVe || isScanning || isGettingLocation || isProcessingImage;
+
     return (
         <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
             <SafeAreaView style={{ flex: 1 }}>
                 <StatusBar barStyle='light-content' backgroundColor="#0f172a" />
 
-                <View style={{ height: 50, backgroundColor: '#1e3a8a', borderRadius: 12, justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 5, marginTop: isAndroid15 ? 35 : 0, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, flexDirection: 'row', paddingHorizontal: 15 }}>
+                <View style={{ height: 44, backgroundColor: '#1e3a8a', borderRadius: 12, justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 5, marginTop: isAndroid15 ? 35 : 0, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, flexDirection: 'row', paddingHorizontal: 15 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialIcons name="access-time" size={24} color="#10b981" style={{ marginRight: 8 }} />
-                        <Text style={{ color: '#f1f5f9', fontSize: 18, fontWeight: 'bold' }}>Chấm Công</Text>
+                        <MaterialIcons name="access-time" size={22} color="#10b981" style={{ marginRight: 8 }} />
+                        <Text style={{ color: '#f1f5f9', fontSize: 17, fontWeight: 'bold' }}>Chấm Công</Text>
                     </View>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 8, borderRadius: 18 }}>
-                        <Ionicons name="close" color="#f1f5f9" size={18} />
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 6, borderRadius: 16 }}>
+                        <Ionicons name="close" color="#f1f5f9" size={16} />
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
 
-                    <View style={{ marginHorizontal: 15, marginVertical: 7, backgroundColor: '#1e293b', borderRadius: 20, padding: 15, shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 15, borderWidth: 1, borderColor: '#334155' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 5 }}>
-                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: status ? '#10b981' : '#f59e0b', marginRight: 10, shadowColor: status ? '#10b981' : '#f59e0b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.5, shadowRadius: 4, elevation: 5 }} />
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: 'white' }}>{status ? 'Đã điểm danh vào' : 'Chưa điểm danh'}</Text>
+                    <View style={{ flexDirection: 'row', marginHorizontal: 15, marginTop: 5 }}>
+                        <TouchableOpacity
+                            onPress={() => setMode('company')}
+                            disabled={isBusy}
+                            style={{ flex: 1, marginRight: 8, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: mode === 'company' ? '#3b82f6' : '#1e293b', borderWidth: 1, borderColor: mode === 'company' ? '#3b82f6' : '#334155' }}
+                        >
+                            <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '700' }}>Tại công ty</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setMode('offsite')}
+                            disabled={isBusy}
+                            style={{ flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: mode === 'offsite' ? '#3b82f6' : '#1e293b', borderWidth: 1, borderColor: mode === 'offsite' ? '#3b82f6' : '#334155' }}
+                        >
+                            <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: '700', textAlign: 'center' }} numberOfLines={2}>Ngoài công ty{'\n'}(tại nơi làm việc)</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={{ marginHorizontal: 15, marginVertical: 6, backgroundColor: '#1e293b', borderRadius: 16, padding: 10, shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 15, borderWidth: 1, borderColor: '#334155' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 3 }}>
+                            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: status ? '#10b981' : '#f59e0b', marginRight: 8, shadowColor: status ? '#10b981' : '#f59e0b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.5, shadowRadius: 4, elevation: 5 }} />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: 'white' }}>{status ? 'Đã điểm danh vào' : 'Chưa điểm danh'}</Text>
                         </View>
-                        <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center' }}>
-                            {isScanning ? '📡 Đang quét và nhận diện...' : isGettingLocation ? '📍 Đang lấy vị trí...' : (failedRecognitionCount > 0 ? `⚠️ Lỗi nhận diện ${failedRecognitionCount}/3 lần - Thử ảnh khác hoặc tiếp tục` : (status ? 'Hãy chụp ảnh để điểm danh về' : 'Hãy chụp ảnh để điểm danh vào'))}
+                        <Text style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
+                            {isScanning ? '📡 Đang quét và nhận diện...' : isProcessingImage ? '🖼️ Đang xử lý vị trí lên ảnh...' : isGettingLocation ? '📍 Đang lấy vị trí...' : (failedRecognitionCount > 0 ? `⚠️ Lỗi nhận diện ${failedRecognitionCount}/3 lần - Thử ảnh khác hoặc tiếp tục` : (status ? 'Hãy chụp ảnh để điểm danh về' : 'Hãy chụp ảnh để điểm danh vào'))}
                         </Text>
                     </View>
 
-                    <View style={{ marginHorizontal: 15, marginBottom: 10 }}>
-                        <View style={{ backgroundColor: '#1e293b', borderRadius: 20, padding: 15, shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 15, borderWidth: 1, borderColor: '#334155' }}>
+                    <View style={{ marginHorizontal: 15, marginBottom: 8 }}>
+                        <View style={{ backgroundColor: '#1e293b', borderRadius: 16, padding: 10, shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 15, borderWidth: 1, borderColor: '#334155' }}>
                             <View style={{ alignItems: 'center' }}>
                                 <View style={{ position: 'relative' }}>
-                                    <View style={{ width: 280, height: 350, borderRadius: 20, overflow: 'hidden', backgroundColor: '#334155', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 10, borderWidth: 3, borderColor: imageUri ? '#3b82f6' : '#475569' }}>
+                                    <View style={{ width: 260, height: 280, borderRadius: 18, overflow: 'hidden', backgroundColor: '#334155', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 10, borderWidth: 3, borderColor: imageUri ? '#3b82f6' : '#475569' }}>
                                         {imageUri ? (
                                             <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                                         ) : (
                                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                                <MaterialIcons name="account-circle" color="#64748b" size={80} style={{ marginBottom: 15 }} />
-                                                <Text style={{ fontSize: 16, color: '#94a3b8', textAlign: 'center', fontWeight: '600' }}>Chưa có ảnh</Text>
-                                                <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginTop: 5 }}>Nhấn nút bên dưới để chụp</Text>
+                                                <MaterialIcons name="account-circle" color="#64748b" size={64} style={{ marginBottom: 10 }} />
+                                                <Text style={{ fontSize: 15, color: '#94a3b8', textAlign: 'center', fontWeight: '600' }}>Chưa có ảnh</Text>
+                                                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'center', marginTop: 4 }}>Nhấn nút bên dưới để chụp</Text>
                                             </View>
                                         )}
                                     </View>
 
                                     <ScanAnimation
                                         isScanning={isScanning}
-                                        width={280}
-                                        height={350}
+                                        width={260}
+                                        height={280}
                                         duration={3000}
                                         onComplete={handleScanComplete}
                                     />
                                 </View>
 
-                                <TouchableOpacity style={{ marginTop: 15, height: 55, paddingHorizontal: 30, borderRadius: 27.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: (isLoadingVao || isLoadingVe || isScanning || isGettingLocation) ? '#6b7280' : '#3b82f6', shadowColor: (isLoadingVao || isLoadingVe || isScanning || isGettingLocation) ? 'transparent' : '#3b82f6', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 15 }} onPress={takePhoto} disabled={isLoadingVao || isLoadingVe || isScanning || isGettingLocation}>
-                                    <MaterialIcons name="camera-alt" color="white" size={24} style={{ marginRight: 12 }} />
-                                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>
+                                <TouchableOpacity style={{ marginTop: 10, height: 44, paddingHorizontal: 20, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: (isBusy) ? '#6b7280' : '#3b82f6', shadowColor: (isBusy) ? 'transparent' : '#3b82f6', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 15 }} onPress={takePhoto} disabled={isBusy}>
+                                    <MaterialIcons name="camera-alt" color="white" size={20} style={{ marginRight: 10 }} />
+                                    <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
                                         {isGettingLocation ? 'Đang lấy vị trí...' : isScanning ? 'Đang quét...' : (failedRecognitionCount > 0 ? `Chụp ảnh (Đã thất bại ${failedRecognitionCount}/3)` : 'Chụp ảnh')}
                                     </Text>
                                 </TouchableOpacity>
@@ -440,36 +493,48 @@ const ChamCongScreen = ({ navigation }) => {
                     </View>
 
                     <View style={{ marginHorizontal: 15 }}>
-                        <TouchableOpacity style={{ height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', backgroundColor: imageUri ? (status ? '#dc2626' : '#10b981') : '#6b7280', shadowColor: imageUri ? (status ? '#dc2626' : '#10b981') : 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20 }} onPress={handleChamCong} disabled={!imageUri || isLoadingVao || isLoadingVe || isScanning || isGettingLocation}>
-                            {(isLoadingVao || isLoadingVe || isScanning || isGettingLocation) ? (
+                        <TouchableOpacity style={{ height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', backgroundColor: imageUri ? (status ? '#dc2626' : '#10b981') : '#6b7280', shadowColor: imageUri ? (status ? '#dc2626' : '#10b981') : 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20 }} onPress={handleChamCong} disabled={!imageUri || isBusy}>
+                            {(isBusy) ? (
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <ActivityIndicator size="small" color="#fff" style={{ marginRight: 12 }} />
-                                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>
-                                        {isGettingLocation ? 'Đang lấy vị trí...' : isScanning ? (failedRecognitionCount > 0 ? `Đang thử lại... (${failedRecognitionCount}/3)` : 'Đang quét và nhận diện...') : 'Đang xử lý...'}
+                                    <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />
+                                    <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
+                                        {isGettingLocation ? 'Đang lấy vị trí...' : isScanning ? (failedRecognitionCount > 0 ? `Đang thử lại... (${failedRecognitionCount}/3)` : 'Đang quét và nhận diện...') : isProcessingImage ? 'Đang xử lý ảnh...' : 'Đang xử lý...'}
                                     </Text>
                                 </View>
                             ) : (
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <MaterialIcons name={status ? "logout" : "login"} color="white" size={24} style={{ marginRight: 12 }} />
-                                    <Text style={{ color: 'white', fontSize: 20, fontWeight: '700' }}>{status ? 'Điểm danh về' : 'Điểm danh vào'}</Text>
+                                    <MaterialIcons name={status ? "logout" : "login"} color="white" size={22} style={{ marginRight: 10 }} />
+                                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '700' }}>{status ? 'Điểm danh về' : 'Điểm danh vào'}</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
 
-                        <View style={{ marginTop: 10, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 15, padding: 15, borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+                        <View style={{ marginTop: 8, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.3)' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <MaterialIcons name="info" color="#3b82f6" size={20} style={{ marginRight: 10 }} />
-                                <Text style={{ color: '#3b82f6', fontSize: 14, fontWeight: '600' }}>Lưu ý quan trọng</Text>
+                                <MaterialIcons name="info" color="#3b82f6" size={18} style={{ marginRight: 8 }} />
+                                <Text style={{ color: '#3b82f6', fontSize: 13, fontWeight: '600' }}>Lưu ý quan trọng</Text>
                             </View>
-                            <Text style={{ color: '#94a3b8', fontSize: 13, marginTop: 8, lineHeight: 18 }}>
-                                • Hệ thống sẽ quét ảnh khuôn mặt để nhận diện điểm danh{'\n'}
-                                • Đảm bảo camera hoạt động tốt và có đủ ánh sáng{'\n'}
-                                • Vui lòng chụp nghiêm túc, rõ nét{'\n'}
-                                • Bạn phải ở trong phạm vi 30m từ công ty để điểm danh
+                            <Text style={{ color: '#94a3b8', fontSize: 12, marginTop: 6, lineHeight: 16 }}>
+                                {mode === 'company' ? (
+                                    <>
+                                        • Hệ thống sẽ quét ảnh khuôn mặt để nhận diện điểm danh{'\n'}
+                                        • Đảm bảo camera hoạt động tốt và có đủ ánh sáng{'\n'}
+                                        • Vui lòng chụp nghiêm túc, rõ nét{'\n'}
+                                        • Bạn phải ở trong phạm vi 30m từ công ty để điểm danh
+                                    </>
+                                ) : (
+                                    <>
+                                        • Chụp rõ khuôn mặt, lấy cảnh xung quanh trong khung hình{'\n'}
+                                        <Text style={{ color: '#fbbf24', fontWeight: '700' }}>• Chụp đúng vị trí nơi đang làm việc để quản trị viên kiểm tra lại{'\n'}</Text>
+                                        <Text style={{ color: '#fbbf24', fontWeight: '700' }}>• Vị trí, khu vực và thời gian sẽ được in trực tiếp lên ảnh chấm công</Text>
+                                    </>
+                                )}
                             </Text>
                         </View>
                     </View>
                 </ScrollView>
+
+                <WatermarkCapture ref={watermarkRef} />
             </SafeAreaView>
         </View>
     );

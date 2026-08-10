@@ -20,17 +20,17 @@ const AdminTeamWorkingScreen = ({ navigation, route }) => {
     const WorkingComponent = WORKING_SCREENS[team.key];
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#1e293b' }}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             <SafeAreaView style={{ flex: 1 }}>
-                <StatusBar barStyle='light-content' backgroundColor="#1e293b" />
+                <StatusBar barStyle='dark-content' backgroundColor="#f8fafc" />
                 <View style={{ paddingHorizontal: 12, paddingTop: isAndroid15 ? 25 : 8, paddingBottom: 8 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', height: 60, backgroundColor: '#1e293b', borderRadius: 16, paddingHorizontal: 16 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', height: 60, backgroundColor: '#ffffff', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: '#e2e8f0' }}>
                         <View style={{ width: 40, height: 40, backgroundColor: team.color, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
                             <Ionicons name={team.icon} size={20} color="#ffffff" />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>Việc đang làm</Text>
-                            <Text style={{ color: '#94a3b8', fontSize: 12, fontWeight: '500' }}>Đội {team.label}</Text>
+                            <Text style={{ color: '#1e293b', fontSize: 18, fontWeight: 'bold' }}>Việc đang làm</Text>
+                            <Text style={{ color: '#64748b', fontSize: 12, fontWeight: '500' }}>Đội {team.label}</Text>
                         </View>
                         <TouchableOpacity
                             style={{ width: 44, height: 44, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 22, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.2)' }}
@@ -40,7 +40,7 @@ const AdminTeamWorkingScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{ flex: 1, marginHorizontal: 8, marginBottom: 8, backgroundColor: '#334155', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 8 }}>
+                <View style={{ flex: 1, marginHorizontal: 8, marginBottom: 8, backgroundColor: '#ffffff', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
                     <WorkingComponent />
                 </View>
             </SafeAreaView>

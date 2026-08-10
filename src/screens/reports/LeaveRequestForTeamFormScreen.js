@@ -84,16 +84,29 @@ const LeaveRequestForTeamFormScreen = ({ navigation }) => {
             return;
         }
 
+        const payload = {
+            user_id: memberId,
+            leave_type_id: leaveTypeId,
+            start_date: toDateStr(startDate),
+            end_date: toDateStr(endDate),
+            session,
+            reason,
+        };
+
+        Alert.alert(
+            'Xác nhận gửi đơn',
+            `Vui lòng kiểm tra lại thông tin trước khi gửi:\n\nNhân viên: ${selectedMember?.username || ''}\nLoại nghỉ phép: ${selectedLeaveType?.name || ''}\nTừ ngày: ${payload.start_date}\nĐến ngày: ${payload.end_date}\nBuổi nghỉ: ${LEAVE_SESSION_LABELS[session]}\nSố ngày ước tính: ${estimatedDays}\nLý do: ${reason || '(không có)'}`,
+            [
+                { text: 'Hủy', style: 'cancel' },
+                { text: 'Gửi đơn', onPress: () => submitRequest(payload) },
+            ]
+        );
+    };
+
+    const submitRequest = async (payload) => {
         setIsSubmitting(true);
         try {
-            await apiCreateLeaveRequest({
-                user_id: memberId,
-                leave_type_id: leaveTypeId,
-                start_date: toDateStr(startDate),
-                end_date: toDateStr(endDate),
-                session,
-                reason,
-            });
+            await apiCreateLeaveRequest(payload);
             Alert.alert('Thành công', `Tạo đơn nghỉ phép cho ${selectedMember?.username} thành công`, [
                 { text: 'OK', onPress: () => navigation.goBack() },
             ]);

@@ -45,6 +45,25 @@ const AttendanceReportFormScreen = ({ navigation }) => {
         if (needCheckIn) payload.proposed_check_in = toTimeStr(checkIn);
         if (needCheckOut) payload.proposed_check_out = toTimeStr(checkOut);
 
+        const summaryLines = [
+            `Ngày báo cáo: ${toDateStr(reportDate)}`,
+            `Loại: ${ATTENDANCE_TYPE_LABELS[type]}`,
+        ];
+        if (needCheckIn) summaryLines.push(`Giờ vào đề xuất: ${toTimeStr(checkIn)}`);
+        if (needCheckOut) summaryLines.push(`Giờ ra đề xuất: ${toTimeStr(checkOut)}`);
+        summaryLines.push(`Lý do: ${reason || '(không có)'}`);
+
+        Alert.alert(
+            'Xác nhận gửi báo cáo',
+            `Vui lòng kiểm tra lại thông tin trước khi gửi:\n\n${summaryLines.join('\n')}`,
+            [
+                { text: 'Hủy', style: 'cancel' },
+                { text: 'Gửi báo cáo', onPress: () => submitReport(payload) },
+            ]
+        );
+    };
+
+    const submitReport = async (payload) => {
         setIsSubmitting(true);
         try {
             await apiCreateAttendanceReport(payload);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "JOB NLTECH",
     "slug": "job-nltech",
-    "version": "4.0.7",
+    "version": "5.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/nltech.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "34",
+      "buildNumber": "37",
       "infoPlist": {
         "NSCameraUsageDescription": "Ứng dụng cần sử dụng camera để chụp ảnh điểm danh chấm công giờ làm việc.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn trong thời gian làm việc để lưu trữ vị trí này trên cơ sở dữ liệu. Quản trị viên sẽ theo dõi vị trí của bạn trên trang web của công ty để đánh giá hiệu suất công việc dựa trên khu vực bạn làm việc.",
@@ -32,7 +32,7 @@
       },
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
-      "versionCode": 34,
+      "versionCode": 37,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",

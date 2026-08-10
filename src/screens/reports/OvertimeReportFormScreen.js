@@ -46,9 +46,22 @@ const OvertimeReportFormScreen = ({ navigation }) => {
             return;
         }
 
+        const payload = { overtime_date: toDateStr(overtimeDate), hours: hoursNumber, reason: reason.trim() };
+
+        Alert.alert(
+            'Xác nhận gửi báo cáo',
+            `Vui lòng kiểm tra lại thông tin trước khi gửi:\n\nNgày tăng ca: ${payload.overtime_date}\nSố giờ: ${payload.hours}\nLý do: ${payload.reason}`,
+            [
+                { text: 'Hủy', style: 'cancel' },
+                { text: 'Gửi báo cáo', onPress: () => submitReport(payload) },
+            ]
+        );
+    };
+
+    const submitReport = async (payload) => {
         setIsSubmitting(true);
         try {
-            await apiCreateOvertimeReport({ overtime_date: toDateStr(overtimeDate), hours: hoursNumber, reason: reason.trim() });
+            await apiCreateOvertimeReport(payload);
             Alert.alert('Thành công', 'Tạo báo cáo tăng ca thành công', [
                 { text: 'OK', onPress: () => navigation.goBack() },
             ]);

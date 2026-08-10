@@ -6,7 +6,8 @@ import { REPORT_TYPES } from '../../constants/reportsConfig';
 
 const isAndroid15 = Platform.OS === 'android' && Platform.Version >= 35;
 
-const HUB_ITEMS = Object.values(REPORT_TYPES);
+// Tạm ẩn "Báo cáo quên chấm công" cho mọi loại tài khoản: đã có chấm công ngoài công ty nên không còn cần báo cáo quên chấm công nữa.
+const HUB_ITEMS = Object.values(REPORT_TYPES).filter((t) => t.key !== 'attendance');
 
 const ReportsHubScreen = ({ navigation }) => {
     useEffect(() => {
