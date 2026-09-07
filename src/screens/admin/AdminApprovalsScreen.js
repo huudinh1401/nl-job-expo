@@ -15,8 +15,13 @@ import {
     apiGetLeaveTypes,
 } from '../../services/apiService';
 import getErrorMessage from '../../utils/getErrorMessage';
-import { getCurrentMonthYear } from '../../utils/monthYear';
+import { getRecentMonths } from '../../utils/monthYear';
 import useLatestRequest from '../../hooks/useLatestRequest';
+
+// Backend luôn mặc định month/year = tháng hiện tại nếu không truyền, nên không có cách lấy
+// "toàn bộ đơn chờ duyệt, không giới hạn thời gian" trong 1 lần gọi -> gộp N tháng gần nhất.
+const RECENT_MONTHS_COUNT = 3;
+const DEFAULT_VIEW_LABEL = 'Tất cả đơn chờ duyệt';
 
 const isAndroid15 = Platform.OS === 'android' && Platform.Version >= 35;
 
@@ -62,7 +67,8 @@ const AdminApprovalsScreen = ({ navigation }) => {
     const [typeFilter, setTypeFilter] = useState('all');
     const [departmentFilter, setDepartmentFilter] = useState('Tất cả');
     const [activePicker, setActivePicker] = useState(null); // 'status' | 'type' | 'department' | null
-    const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear());
+    // null = mặc định (đơn chờ duyệt trong 3 tháng gần nhất); {month, year} = lọc đúng 1 tháng do người dùng chọn.
+    const [monthFilter, setMonthFilter] = useState(null);
     const [showMonthPicker, setShowMonthPicker] = useState(false);
     const [rejectTarget, setRejectTarget] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
@@ -79,27 +85,45 @@ const AdminApprovalsScreen = ({ navigation }) => {
 
     const canApprove = canApproveReports(userID);
 
+    // Gộp kết quả nhiều lần gọi API theo id (cần khi mặc định phải quét nhiều tháng).
+    const dedupeById = (resList) => {
+        const map = new Map();
+        resList.forEach((res) => (res.data || []).forEach((item) => map.set(item.id, item)));
+        return Array.from(map.values());
+    };
+
     // Admin không truyền userId -> lấy toàn bộ. GET /leave-requests không trả tên loại nghỉ nên map thêm qua GET /leave-types.
     const fetchAll = useCallback(async () => {
         const requestId = start();
         setLoading(true);
         try {
-            const monthYearParams = { month, year };
+            // Có chọn tháng cụ thể -> chỉ lấy đúng tháng đó, đủ mọi trạng thái (như cũ).
+            // Mặc định -> quét N tháng gần nhất, mỗi tháng chỉ lấy status=pending, gộp lại,
+            // để đơn pending của tháng trước không biến mất khi sang tháng mới.
+            const overtimeRequests = monthFilter
+                ? [FETCHERS.overtime(monthFilter)]
+                : getRecentMonths(RECENT_MONTHS_COUNT).map((my) => FETCHERS.overtime({ ...my, status: 'pending' }));
+            const leaveRequests = monthFilter
+                ? [FETCHERS.leave(monthFilter)]
+                : getRecentMonths(RECENT_MONTHS_COUNT).map((my) => FETCHERS.leave({ ...my, status: 'pending' }));
+
             // Tạm ẩn báo cáo quên chấm công (không fetch), chờ BE cập nhật API mới.
-            const [/* attendanceRes, */ overtimeRes, leaveRes, leaveTypesRes] = await Promise.all([
-                // FETCHERS.attendance(monthYearParams),
-                FETCHERS.overtime(monthYearParams),
-                FETCHERS.leave(monthYearParams),
+            const [overtimeResList, leaveResList, leaveTypesRes] = await Promise.all([
+                Promise.all(overtimeRequests),
+                Promise.all(leaveRequests),
                 apiGetLeaveTypes(),
             ]);
+            const overtimeItems = dedupeById(overtimeResList);
+            const leaveItemsRaw = dedupeById(leaveResList);
+
             const nameById = {};
             (leaveTypesRes.data || []).forEach((t) => { nameById[t.id] = t.name; });
-            const leaveItems = (leaveRes.data || []).map((item) => ({ ...item, leave_type_name: nameById[item.leave_type_id] || item.leave_type_name }));
+            const leaveItems = leaveItemsRaw.map((item) => ({ ...item, leave_type_name: nameById[item.leave_type_id] || item.leave_type_name }));
 
             if (!isLatest(requestId)) return;
             setDataByType({
                 attendance: [], // Tạm ẩn báo cáo quên chấm công, chờ BE cập nhật API mới.
-                overtime: overtimeRes.data || [],
+                overtime: overtimeItems,
                 leave: leaveItems,
             });
         } catch (error) {
@@ -108,7 +132,7 @@ const AdminApprovalsScreen = ({ navigation }) => {
         } finally {
             if (isLatest(requestId)) setLoading(false);
         }
-    }, [month, year]);
+    }, [monthFilter]);
 
     useFocusEffect(
         useCallback(() => {
@@ -213,6 +237,8 @@ const AdminApprovalsScreen = ({ navigation }) => {
         );
     };
 
+    const monthLabel = monthFilter ? `Tháng ${monthFilter.month}/${monthFilter.year}` : DEFAULT_VIEW_LABEL;
+
     const pickerOptions = activePicker === 'status' ? STATUS_OPTIONS : activePicker === 'type' ? TYPE_OPTIONS : DEPARTMENT_OPTIONS;
     const pickerValue = activePicker === 'status' ? statusFilter : activePicker === 'type' ? typeFilter : departmentFilter;
     const handlePick = (key) => {
@@ -235,7 +261,7 @@ const AdminApprovalsScreen = ({ navigation }) => {
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff' }}>Duyệt đơn</Text>
                                 <Text style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.85)' }}>
-                                    {canApprove ? `${pendingCount} đơn chờ duyệt · tháng ${month}/${year}` : `Chỉ xem · tháng ${month}/${year}`}
+                                    {canApprove ? `${pendingCount} đơn chờ duyệt · ${monthLabel}` : `Chỉ xem · ${monthLabel}`}
                                 </Text>
                             </View>
                         </View>
@@ -250,7 +276,7 @@ const AdminApprovalsScreen = ({ navigation }) => {
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 12, marginTop: 12, backgroundColor: '#ffffff', borderRadius: 12, paddingVertical: 10, borderWidth: 1, borderColor: '#e2e8f0' }}
                 >
                     <Ionicons name="calendar-outline" size={16} color="#64748b" style={{ marginRight: 8 }} />
-                    <Text style={{ color: '#1e293b', fontSize: 13, fontWeight: '700' }}>Tháng {month}/{year}</Text>
+                    <Text style={{ color: '#1e293b', fontSize: 13, fontWeight: '700' }} numberOfLines={1}>{monthLabel}</Text>
                     <Ionicons name="chevron-down" size={14} color="#64748b" style={{ marginLeft: 6 }} />
                 </TouchableOpacity>
 
@@ -329,10 +355,12 @@ const AdminApprovalsScreen = ({ navigation }) => {
 
                 <MonthYearPickerModal
                     visible={showMonthPicker}
-                    month={month}
-                    year={year}
+                    month={monthFilter?.month}
+                    year={monthFilter?.year}
                     accentColor="#8b5cf6"
-                    onSelect={(m, y) => { setMonthYear({ month: m, year: y }); setShowMonthPicker(false); }}
+                    allLabel={`${DEFAULT_VIEW_LABEL} (mặc định)`}
+                    onSelectAll={() => { setMonthFilter(null); setShowMonthPicker(false); }}
+                    onSelect={(m, y) => { setMonthFilter({ month: m, year: y }); setShowMonthPicker(false); }}
                     onClose={() => setShowMonthPicker(false)}
                 />
             </SafeAreaView>
